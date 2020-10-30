@@ -31,10 +31,17 @@ export class RoomManagerImpl implements RoomManager {
     return this.voiceChannelService.list();
   }
 
-  listAvailableRooms(): VoiceChannel[] {
-    return this.listTrackedRooms().filter((channel) => {
-      const freeSlot = channel.userLimit - channel.userCount;
-      return freeSlot > 0;
-    });
+  listAvailableRooms(max: number): VoiceChannel[] {
+    return this.listTrackedRooms()
+      .filter((channel) => {
+        const freeSlot = channel.userLimit - channel.userCount;
+        return freeSlot > 0 && channel.userCount > 0;
+      })
+      .sort((a, b) => {
+        const aFreeSlot = a.userLimit - a.userCount;
+        const bFreeSlot = b.userLimit - b.userCount;
+        return bFreeSlot - aFreeSlot;
+      })
+      .slice(0, max);
   }
 }

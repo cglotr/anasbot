@@ -32,11 +32,19 @@ export class MessageStringServiceImpl implements MessageStringService {
     channels
       .sort((a, b) => a.position - b.position)
       .forEach((channel) => {
-        message += `${channel.link}\n`;
+        message += `${this.printRoomSlot(channel)} ${channel.name}: ${
+          channel.link
+        }\n`;
       });
     if (channels.length < 1) {
       message += `_None_`;
     }
     return message;
+  }
+
+  printRoomSlot(channel: VoiceChannel): string {
+    return `[${channel.userCount
+      .toString()
+      .padStart(2, '0')}/${channel.userLimit.toString().padStart(2, '0')}]`;
   }
 }

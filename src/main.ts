@@ -25,14 +25,13 @@ logger.info(`discord token: ${process.env.DISCORD_TOKEN}`);
 client.on('ready', () => {
   logger.info('bot started');
   client.setInterval(() => {
-    logger.info(`processing cron...`);
     if (roomManager) {
       notiChanStorage.list().forEach((notiChan) => {
         client.channels.fetch(notiChan.id).then((channel) => {
           if (channel instanceof Discord.TextChannel) {
             channel.send(
               messageStringService.printAvailableGameChannels(
-                roomManager.listAvailableRooms(),
+                roomManager.listAvailableRooms(5),
               ),
             );
           }
@@ -47,6 +46,17 @@ client.on('message', (msg) => {
     case '-start': {
       if (msg.guild) {
         roomManager = new RoomManagerImpl(voiceChannelService, msg.guild);
+      }
+      break;
+    }
+    case '-quick':
+    case '-q': {
+      if (roomManager) {
+        msg.channel.send(
+          messageStringService.printAvailableGameChannels(
+            roomManager.listAvailableRooms(1),
+          ),
+        );
       }
       break;
     }
