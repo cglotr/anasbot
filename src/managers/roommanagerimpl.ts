@@ -40,9 +40,7 @@ export class RoomManagerImpl implements RoomManager {
         return freeSlot > 0 && channel.userCount > 0;
       })
       .sort((a, b) => {
-        const aFreeSlot = a.userLimit - a.userCount;
-        const bFreeSlot = b.userLimit - b.userCount;
-        return bFreeSlot - aFreeSlot;
+        return b.userCount - a.userCount;
       })
       .slice(0, max);
   }
