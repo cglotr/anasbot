@@ -107,6 +107,21 @@ client.on('message', (msg) => {
   }
 });
 
+client.on('voiceStateUpdate', (oldState, newState) => {
+  if (oldState.channel) {
+    roomManager.updateRoomUserCount(
+      oldState.channel.id,
+      oldState.channel.members.size,
+    );
+  }
+  if (newState.channel) {
+    roomManager.updateRoomUserCount(
+      newState.channel.id,
+      newState.channel.members.size,
+    );
+  }
+});
+
 client.on('error', (e) => {
   loggerService.error(e.message);
 });

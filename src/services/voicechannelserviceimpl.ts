@@ -16,11 +16,10 @@ export class VoiceChannelServiceImpl implements VoiceChannelService {
     return Array.from(this.voiceChannels.values());
   }
 
-  update(voiceChannel: VoiceChannel): boolean {
-    if (!this.voiceChannels.has(voiceChannel.id)) {
-      return false;
-    }
-    this.voiceChannels.set(voiceChannel.id, voiceChannel);
+  updateUserCount(voiceChannelID: string, userCount: number): boolean {
+    const voiceChannel = this.voiceChannels.get(voiceChannelID);
+    if (!voiceChannel) return false;
+    voiceChannel.userCount = userCount;
     return true;
   }
 

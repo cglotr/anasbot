@@ -44,4 +44,8 @@ export class RoomManagerImpl implements RoomManager {
       })
       .slice(0, max);
   }
+
+  updateRoomUserCount(voiceChannelID: string, userCount: number): void {
+    this.voiceChannelService.updateUserCount(voiceChannelID, userCount);
+  }
 }
