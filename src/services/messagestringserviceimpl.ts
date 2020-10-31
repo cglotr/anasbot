@@ -28,7 +28,7 @@ export class MessageStringServiceImpl implements MessageStringService {
   }
 
   printAvailableGameChannels(channels: Array<VoiceChannel>): string {
-    let message = '**Available Among Us Channels:**\n';
+    let message = ``;
     channels
       .sort((a, b) => a.position - b.position)
       .forEach((channel) => {

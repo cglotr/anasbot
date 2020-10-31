@@ -3,6 +3,8 @@ import { VoiceChannelService } from '../services/voicechannelservice';
 import { VoiceChannel } from '../types/voicechannel';
 import { RoomManager } from './roommanager';
 
+const AMONG_US_ROOM_SIZE = 10;
+
 export class RoomManagerImpl implements RoomManager {
   voiceChannelService: VoiceChannelService;
 
@@ -11,8 +13,8 @@ export class RoomManagerImpl implements RoomManager {
 
     guild.channels.cache.forEach((channel) => {
       if (channel instanceof Discord.VoiceChannel) {
-        if (channel.userLimit === 10) {
-          channel.createInvite().then((invite) => {
+        if (channel.userLimit === AMONG_US_ROOM_SIZE) {
+          channel.createInvite({ maxAge: 0 }).then((invite) => {
             this.voiceChannelService.add({
               id: channel.id,
               name: channel.name,

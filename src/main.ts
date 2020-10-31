@@ -1,35 +1,39 @@
 import Discord from 'discord.js';
 import { config } from 'dotenv';
-import { ConsoleLogger, Logger } from './logger';
 import { RoomManager } from './managers/roommanager';
 import { RoomManagerImpl } from './managers/roommanagerimpl';
+import { LoggerService } from './services/loggerservice';
+import { LoggerServiceImpl } from './services/loggerserviceimpl';
 import { MessageStringService } from './services/messagestringservice';
 import { MessageStringServiceImpl } from './services/messagestringserviceimpl';
+import { TextChannelService } from './services/textchannelservice';
+import { TextChannelServiceImpl } from './services/textchannelserviceimpl';
 import { VoiceChannelService } from './services/voicechannelservice';
 import { VoiceChannelServiceImpl } from './services/voicechannelserviceimpl';
-import { TextChannelStorage } from './textchannelstorage';
+
+const TIME_5_MIN: number = 1000 * 60 * 5;
 
 config();
 
 const client = new Discord.Client();
-const logger: Logger = new ConsoleLogger();
-const notiChanStorage: TextChannelStorage = new TextChannelStorage();
 
+const loggerService: LoggerService = new LoggerServiceImpl();
 const messageStringService: MessageStringService = new MessageStringServiceImpl();
+const textChannelService: TextChannelService = new TextChannelServiceImpl();
 const voiceChannelService: VoiceChannelService = new VoiceChannelServiceImpl();
 
 let roomManager: RoomManager;
 
-logger.info(`discord token: ${process.env.DISCORD_TOKEN}`);
+loggerService.info(`discord token: ${process.env.DISCORD_TOKEN}`);
 
 client.on('ready', () => {
-  logger.info('bot started');
+  loggerService.info('anasbot ready!');
   client.setInterval(() => {
     if (roomManager) {
-      notiChanStorage.list().forEach((notiChan) => {
-        client.channels.fetch(notiChan.id).then((channel) => {
-          if (channel instanceof Discord.TextChannel) {
-            channel.send(
+      textChannelService.list().forEach((channel) => {
+        client.channels.fetch(channel.id).then((resolvedChannel) => {
+          if (resolvedChannel instanceof Discord.TextChannel) {
+            resolvedChannel.send(
               messageStringService.printAvailableGameChannels(
                 roomManager.listAvailableRooms(5),
               ),
@@ -38,7 +42,7 @@ client.on('ready', () => {
         });
       });
     }
-  }, 1000 * 5);
+  }, TIME_5_MIN);
 });
 
 client.on('message', (msg) => {
@@ -46,44 +50,53 @@ client.on('message', (msg) => {
     case '-start': {
       if (msg.guild) {
         roomManager = new RoomManagerImpl(voiceChannelService, msg.guild);
+        msg.reply(`anasbot started!`);
       }
       break;
     }
     case '-quick':
     case '-q': {
       if (roomManager) {
-        msg.channel.send(
-          messageStringService.printAvailableGameChannels(
-            roomManager.listAvailableRooms(1),
-          ),
-        );
+        msg.reply(`looking for available game...`);
+        const rooms = roomManager.listAvailableRooms(1);
+        if (rooms.length < 1) {
+          msg.channel.send(
+            `Looks like no room is looking for players right now. Why don't you start one :)`,
+          );
+          break;
+        } else {
+          msg.channel.send(
+            messageStringService.printAvailableGameChannels(rooms),
+          );
+        }
       }
       break;
     }
     case '-alert': {
       msg.channel.fetch().then((channel) => {
         if (channel instanceof Discord.TextChannel) {
-          notiChanStorage.add({
+          textChannelService.add({
             id: channel.id,
             name: channel.name,
           });
+          msg.reply(`room added to alerts`);
         }
       });
       break;
     }
     case '-unalert': {
-      notiChanStorage.removeByChannelID(msg.channel.id);
+      textChannelService.removeByChannelID(msg.channel.id);
+      msg.reply(`room removed from alerts`);
       break;
     }
     case '-info': {
-      logger.info(`processing !info command: user=[${msg.author}]`);
+      msg.reply(`retrieving bot info...`);
       let info = ``;
       info += messageStringService.printGameChannels(
         roomManager.listTrackedRooms(),
       );
-      info += `\n`;
       info += messageStringService.printNotificationChannels(
-        notiChanStorage.list(),
+        textChannelService.list(),
       );
       msg.channel.send(info);
       break;
@@ -95,7 +108,7 @@ client.on('message', (msg) => {
 });
 
 client.on('error', (e) => {
-  logger.error(e.message);
+  loggerService.error(e.message);
 });
 
 client.login(process.env.DISCORD_TOKEN);

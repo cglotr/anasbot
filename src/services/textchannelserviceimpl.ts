@@ -1,7 +1,7 @@
-import { Storage } from './storage';
-import { TextChannel } from './types/textchannel';
+import { TextChannel } from '../types/textchannel';
+import { TextChannelService } from './textchannelservice';
 
-export class TextChannelStorage implements Storage<TextChannel> {
+export class TextChannelServiceImpl implements TextChannelService {
   channels: Map<string, TextChannel>;
 
   constructor() {

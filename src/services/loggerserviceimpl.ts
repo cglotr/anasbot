@@ -1,10 +1,6 @@
-export interface Logger {
-  info(message: string): void;
-  warning(message: string): void;
-  error(message: string): void;
-}
+import { LoggerService } from './loggerservice';
 
-export class ConsoleLogger implements Logger {
+export class LoggerServiceImpl implements LoggerService {
   info(message: string) {
     // eslint-disable-next-line
     console.log('[info]', message);
