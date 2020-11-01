@@ -108,17 +108,19 @@ client.on('message', (msg) => {
 });
 
 client.on('voiceStateUpdate', (oldState, newState) => {
-  if (oldState.channel) {
-    roomManager.updateRoomUserCount(
-      oldState.channel.id,
-      oldState.channel.members.size,
-    );
-  }
-  if (newState.channel) {
-    roomManager.updateRoomUserCount(
-      newState.channel.id,
-      newState.channel.members.size,
-    );
+  if (roomManager) {
+    if (oldState.channel) {
+      roomManager.updateRoomUserCount(
+        oldState.channel.id,
+        oldState.channel.members.size,
+      );
+    }
+    if (newState.channel) {
+      roomManager.updateRoomUserCount(
+        newState.channel.id,
+        newState.channel.members.size,
+      );
+    }
   }
 });
 
