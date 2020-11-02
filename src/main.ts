@@ -30,13 +30,15 @@ client.on('ready', () => {
   loggerService.info('anasbot ready!');
   client.setInterval(() => {
     if (roomManager) {
+      const rooms = roomManager.listAvailableRooms(5);
+      if (rooms.length < 1) {
+        return;
+      }
       textChannelService.list().forEach((channel) => {
         client.channels.fetch(channel.id).then((resolvedChannel) => {
           if (resolvedChannel instanceof Discord.TextChannel) {
             resolvedChannel.send(
-              messageStringService.printAvailableGameChannels(
-                roomManager.listAvailableRooms(5),
-              ),
+              messageStringService.printAvailableGameChannels(rooms),
             );
           }
         });
