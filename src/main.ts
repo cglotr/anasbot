@@ -77,7 +77,7 @@ client.on('message', (msg) => {
             }
           });
         }
-        msg.reply(`anasbot started!`);
+        msg.reply(`anasbot started: \`${msg.guild.id}\``);
       }
       break;
     }

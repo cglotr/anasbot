@@ -19,7 +19,7 @@ export class MessageStringServiceImpl implements MessageStringService {
     channels
       .sort((a, b) => a.position - b.position)
       .forEach((channel) => {
-        message += `- ${channel.name}\n`;
+        message += `- ${channel.name}: \`${channel.id}\`\n`;
       });
     if (channels.length < 1) {
       message += `_None_`;

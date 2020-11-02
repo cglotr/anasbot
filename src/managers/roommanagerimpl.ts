@@ -1,6 +1,7 @@
 import Discord from 'discord.js';
 import { VoiceChannelService } from '../services/voicechannelservice';
 import { VoiceChannel } from '../types/voicechannel';
+import { getEnv } from '../utils/getenv';
 import { RoomManager } from './roommanager';
 
 const AMONG_US_ROOM_SIZE = 10;
@@ -12,6 +13,10 @@ export class RoomManagerImpl implements RoomManager {
     this.voiceChannelService = voiceChannelService;
 
     guild.channels.cache.forEach((channel) => {
+      const blacklist = getEnv(process.env.BLACKLISTED_VOICE_CHANNELS);
+      if (blacklist.includes(channel.id)) {
+        return;
+      }
       if (channel instanceof Discord.VoiceChannel) {
         if (channel.userLimit === AMONG_US_ROOM_SIZE) {
           channel.createInvite({ maxAge: 0 }).then((invite) => {
