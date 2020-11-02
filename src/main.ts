@@ -49,10 +49,34 @@ client.on('ready', () => {
 });
 
 client.on('message', (msg) => {
-  switch (msg.content.trim()) {
+  const splits = msg.content.split(' ');
+  if (splits.length < 1) {
+    return;
+  }
+  const command = splits[0];
+  switch (command) {
     case '-start': {
       if (msg.guild) {
         roomManager = new RoomManagerImpl(voiceChannelService, msg.guild);
+        if (process.env.DEFAULT_NOTIFICATION_CHANNELS) {
+          const defaultNotificationChannelIDs = process.env.DEFAULT_NOTIFICATION_CHANNELS.split(
+            ',',
+          );
+          defaultNotificationChannelIDs.forEach((channelID) => {
+            if (msg.guild) {
+              const channel = msg.guild.channels.resolve(channelID);
+              if (channel instanceof Discord.TextChannel) {
+                textChannelService.add({
+                  id: channel.id,
+                  name: channel.name,
+                });
+                loggerService.info(
+                  `room added to alerts: id=${channel.id}, name=${channel.name}`,
+                );
+              }
+            }
+          });
+        }
         msg.reply(`anasbot started!`);
       }
       break;
@@ -93,6 +117,9 @@ client.on('message', (msg) => {
       break;
     }
     case '-info': {
+      if (!roomManager) {
+        return;
+      }
       msg.reply(`retrieving bot info...`);
       let info = ``;
       info += messageStringService.printGameChannels(
@@ -117,6 +144,35 @@ client.on('message', (msg) => {
           }
         });
         msg.channel.send(messageStringService.printTextChannels(textChannels));
+      }
+      break;
+    }
+    case '-addtextchannel': {
+      if (splits.length > 1) {
+        const channelID = splits[1];
+        if (msg.guild) {
+          const channel = msg.guild.channels.resolve(channelID);
+          if (channel) {
+            textChannelService.add({
+              id: channel.id,
+              name: channel.name,
+            });
+            msg.reply(`room added to alerts: ${channel.id}`);
+          }
+        }
+      }
+      break;
+    }
+    case '-removetextchannel': {
+      if (splits.length > 1) {
+        const channelID = splits[1];
+        if (msg.guild) {
+          const channel = msg.guild.channels.resolve(channelID);
+          if (channel) {
+            textChannelService.removeByChannelID(channel.id);
+            msg.reply(`room removed from alerts: ${channel.id}`);
+          }
+        }
       }
       break;
     }
