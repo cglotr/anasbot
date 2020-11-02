@@ -28,6 +28,30 @@ let roomManager: RoomManager;
 loggerService.info(`discord token: ${process.env.DISCORD_TOKEN}`);
 
 client.on('ready', () => {
+  if (process.env.GUILD_ID) {
+    const guild = client.guilds.resolve(process.env.GUILD_ID);
+    if (guild) {
+      roomManager = new RoomManagerImpl(voiceChannelService, guild);
+      if (process.env.DEFAULT_NOTIFICATION_CHANNELS) {
+        const defaultNotificationChannelIDs = process.env.DEFAULT_NOTIFICATION_CHANNELS.split(
+          ',',
+        );
+        defaultNotificationChannelIDs.forEach((channelID) => {
+          const channel = guild.channels.resolve(channelID);
+          if (channel instanceof Discord.TextChannel) {
+            textChannelService.add({
+              id: channel.id,
+              name: channel.name,
+            });
+            loggerService.info(
+              `room added to alerts: id=${channel.id}, name=${channel.name}`,
+            );
+          }
+        });
+      }
+      loggerService.info(`anasbot started: \`${guild.id}\``);
+    }
+  }
   loggerService.info('anasbot ready!');
   client.setInterval(() => {
     if (roomManager) {
