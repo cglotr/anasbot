@@ -10,6 +10,7 @@ import { TextChannelService } from './services/textchannelservice';
 import { TextChannelServiceImpl } from './services/textchannelserviceimpl';
 import { VoiceChannelService } from './services/voicechannelservice';
 import { VoiceChannelServiceImpl } from './services/voicechannelserviceimpl';
+import { TextChannel } from './types/textchannel';
 
 const TIME_5_MIN: number = 1000 * 60 * 5;
 
@@ -101,6 +102,22 @@ client.on('message', (msg) => {
         textChannelService.list(),
       );
       msg.channel.send(info);
+      break;
+    }
+    case '-textchannels': {
+      msg.reply('retrieving text channels...');
+      if (msg.guild) {
+        const textChannels: TextChannel[] = [];
+        msg.guild.channels.cache.forEach((channel) => {
+          if (channel instanceof Discord.TextChannel) {
+            textChannels.push({
+              id: channel.id,
+              name: channel.name,
+            });
+          }
+        });
+        msg.channel.send(messageStringService.printTextChannels(textChannels));
+      }
       break;
     }
     default: {

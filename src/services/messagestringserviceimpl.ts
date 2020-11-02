@@ -47,4 +47,15 @@ export class MessageStringServiceImpl implements MessageStringService {
       .toString()
       .padStart(2, '0')}/${channel.userLimit.toString().padStart(2, '0')}]`;
   }
+
+  printTextChannels(channels: TextChannel[]): string {
+    let message = '**Text Channels:**\n';
+    channels.forEach((channel) => {
+      message += `- ${channel.name}: \`${channel.id}\`\n`;
+    });
+    if (channels.length < 1) {
+      message += `_None_`;
+    }
+    return message;
+  }
 }
