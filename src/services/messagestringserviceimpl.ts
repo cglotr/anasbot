@@ -43,9 +43,9 @@ export class MessageStringServiceImpl implements MessageStringService {
   }
 
   printRoomSlot(channel: VoiceChannel): string {
-    return `[${channel.userCount
+    return `\`[${channel.userCount
       .toString()
-      .padStart(2, '0')}/${channel.userLimit.toString().padStart(2, '0')}]`;
+      .padStart(2, '0')}/${channel.userLimit.toString().padStart(2, '0')}]\``;
   }
 
   printTextChannels(channels: TextChannel[]): string {

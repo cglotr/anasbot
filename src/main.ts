@@ -38,9 +38,11 @@ client.on('ready', () => {
       textChannelService.list().forEach((channel) => {
         client.channels.fetch(channel.id).then((resolvedChannel) => {
           if (resolvedChannel instanceof Discord.TextChannel) {
-            resolvedChannel.send(
-              messageStringService.printAvailableGameChannels(rooms),
-            );
+            let content = ``;
+            content += `**Available Game Channels**\n`;
+            content += `_Looking for a quick game? Try using \`-q\` command in any text channel. I will recommend you good room to join!_\n\n`;
+            content += messageStringService.printAvailableGameChannels(rooms);
+            resolvedChannel.send(content);
           }
         });
       });
