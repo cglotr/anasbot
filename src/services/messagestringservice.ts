@@ -7,4 +7,5 @@ export interface MessageStringService {
   printAvailableGameChannels(channels: Array<VoiceChannel>): string;
   printRoomSlot(channel: VoiceChannel): string;
   printTextChannels(channels: TextChannel[]): string;
+  printVoiceChannels(channels: VoiceChannel[]): string;
 }

@@ -23,7 +23,7 @@ describe('LoggerServiceImpl', () => {
   });
 
   test('logging error', () => {
-    loggerService.error('hello');
+    loggerService.error('hello', 'error');
     expect(console.error).toHaveBeenCalledWith('[errr]', 'hello');
   });
 });

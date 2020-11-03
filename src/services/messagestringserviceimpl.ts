@@ -49,7 +49,15 @@ export class MessageStringServiceImpl implements MessageStringService {
   }
 
   printTextChannels(channels: TextChannel[]): string {
-    let message = '**Text Channels:**\n';
+    return `**Text Channels:**\n${this._printChannels(channels)}`;
+  }
+
+  printVoiceChannels(channels: VoiceChannel[]): string {
+    return `**Voice Channels:**\n${this._printChannels(channels)}`;
+  }
+
+  _printChannels(channels: { name: string, id: string }[]): string {
+    let message = ``;
     channels.forEach((channel) => {
       message += `- ${channel.name}: \`${channel.id}\`\n`;
     });

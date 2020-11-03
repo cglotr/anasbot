@@ -11,6 +11,7 @@ import { TextChannelServiceImpl } from './services/textchannelserviceimpl';
 import { VoiceChannelService } from './services/voicechannelservice';
 import { VoiceChannelServiceImpl } from './services/voicechannelserviceimpl';
 import { TextChannel } from './types/textchannel';
+import { VoiceChannel } from './types/voicechannel';
 
 const TIME_5_MIN: number = 1000 * 60 * 5;
 
@@ -31,7 +32,11 @@ client.on('ready', () => {
   if (process.env.GUILD_ID) {
     const guild = client.guilds.resolve(process.env.GUILD_ID);
     if (guild) {
-      roomManager = new RoomManagerImpl(voiceChannelService, guild);
+      roomManager = new RoomManagerImpl(
+        voiceChannelService,
+        loggerService,
+        guild,
+      );
       if (process.env.DEFAULT_NOTIFICATION_CHANNELS) {
         const defaultNotificationChannelIDs = process.env.DEFAULT_NOTIFICATION_CHANNELS.split(
           ',',
@@ -155,6 +160,32 @@ client.on('message', (msg) => {
         textChannelService.list(),
       );
       msg.channel.send(info);
+      break;
+    }
+    case '-voicechannels': {
+      msg.reply('retrieving voice channels...');
+      if (msg.guild) {
+        const voiceChannels: VoiceChannel[] = [];
+        msg.guild.channels.cache.forEach((channel) => {
+          if (channel instanceof Discord.VoiceChannel) {
+            voiceChannels.push({
+              id: channel.id,
+              name: channel.name,
+              userCount: channel.members.size,
+              userLimit: channel.userLimit,
+              link: '',
+              position: channel.position
+            });
+          }
+        });
+        msg.channel.send(messageStringService.printVoiceChannels(voiceChannels));
+      }
+      break;
+    }
+    case '-addvoicechannel': {
+      break;
+    }
+    case '-removevoicechannel': {
       break;
     }
     case '-textchannels': {
