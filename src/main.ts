@@ -88,7 +88,11 @@ client.on('message', (msg) => {
   switch (command) {
     case '-start': {
       if (msg.guild) {
-        roomManager = new RoomManagerImpl(voiceChannelService, loggerService, msg.guild);
+        roomManager = new RoomManagerImpl(
+          voiceChannelService,
+          loggerService,
+          msg.guild,
+        );
         if (process.env.DEFAULT_NOTIFICATION_CHANNELS) {
           const defaultNotificationChannelIDs = process.env.DEFAULT_NOTIFICATION_CHANNELS.split(
             ',',
@@ -174,11 +178,13 @@ client.on('message', (msg) => {
               userCount: channel.members.size,
               userLimit: channel.userLimit,
               link: '',
-              position: channel.position
+              position: channel.position,
             });
           }
         });
-        msg.channel.send(messageStringService.printVoiceChannels(voiceChannels));
+        msg.channel.send(
+          messageStringService.printVoiceChannels(voiceChannels),
+        );
       }
       break;
     }
@@ -257,7 +263,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 });
 
 client.on('error', (e) => {
-  loggerService.error(e.message);
+  loggerService.error('something went wrong in discord', e.message);
 });
 
 client.login(process.env.DISCORD_TOKEN);
