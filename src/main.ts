@@ -88,7 +88,7 @@ client.on('message', (msg) => {
   switch (command) {
     case '-start': {
       if (msg.guild) {
-        roomManager = new RoomManagerImpl(voiceChannelService, msg.guild);
+        roomManager = new RoomManagerImpl(voiceChannelService, loggerService, msg.guild);
         if (process.env.DEFAULT_NOTIFICATION_CHANNELS) {
           const defaultNotificationChannelIDs = process.env.DEFAULT_NOTIFICATION_CHANNELS.split(
             ',',
