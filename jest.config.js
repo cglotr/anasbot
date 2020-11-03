@@ -1,4 +1,5 @@
 module.exports = {
+  collectCoverageFrom: ['src/**/*.ts'],
   coveragePathIgnorePatterns: ['dist', 'src/main.ts'],
   globals: {
     'ts-jest': {
@@ -9,6 +10,6 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx)$': './node_modules/ts-jest/preprocessor.js',
   },
-  testMatch: ['**/*.test.(ts|js)'],
+  testMatch: ['**/*.test.ts'],
   testEnvironment: 'node',
 };

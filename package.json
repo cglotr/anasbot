@@ -14,7 +14,7 @@
   "scripts": {
     "start": "npm run build && node dist/main.js",
     "build": "npm run build-ts",
-    "test": "jest --forceExit --coverage --verbose",
+    "test": "jest --coverage --verbose",
     "lint": "eslint --fix \"**/*.ts\"",
     "format": "prettier --write .",
     "build-ts": "node_modules/typescript/bin/tsc",
