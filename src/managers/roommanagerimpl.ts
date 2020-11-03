@@ -19,16 +19,21 @@ export class RoomManagerImpl implements RoomManager {
       }
       if (channel instanceof Discord.VoiceChannel) {
         if (channel.userLimit === AMONG_US_ROOM_SIZE) {
-          channel.createInvite({ maxAge: 0 }).then((invite) => {
-            this.voiceChannelService.add({
-              id: channel.id,
-              name: channel.name,
-              userCount: channel.members.size,
-              userLimit: channel.userLimit,
-              link: invite.url,
-              position: channel.position,
+          channel
+            .createInvite({ maxAge: 0 })
+            .then((invite) => {
+              this.voiceChannelService.add({
+                id: channel.id,
+                name: channel.name,
+                userCount: channel.members.size,
+                userLimit: channel.userLimit,
+                link: invite.url,
+                position: channel.position,
+              });
+            })
+            .catch((e) => {
+              console.error('[DEBUG]', e);
             });
-          });
         }
       }
     });
