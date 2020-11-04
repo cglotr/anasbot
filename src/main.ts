@@ -85,9 +85,6 @@ client.on('message', (msg) => {
   }
   const command = splits[0];
   switch (command) {
-    case '-start': {
-      break;
-    }
     case '-quick':
     case '-q': {
       if (roomManager) {
@@ -168,9 +165,23 @@ client.on('message', (msg) => {
       break;
     }
     case '-addvoicechannel': {
+      if (splits.length <= 1) {
+        return;
+      }
+      if (!roomManager) {
+        return;
+      }
+      roomManager.add(splits[1]);
       break;
     }
     case '-removevoicechannel': {
+      if (splits.length <= 1) {
+        return;
+      }
+      if (!roomManager) {
+        return;
+      }
+      roomManager.remove(splits[1]);
       break;
     }
     case '-textchannels': {
