@@ -4,7 +4,7 @@
 
 _anasbot_ is a bot that helps to keep track of available voice channels to play [Among Us](http://www.innersloth.com/gameAmongUs.php).
 
-![anasbot](https://imgur.com/a/CWfEkej "anasbot in action")
+![anasbot](https://i.imgur.com/X10tf9H.png "anasbot in action")
 
 | Command                                 | Description                                             |
 | --------------------------------------- | ------------------------------------------------------- |
