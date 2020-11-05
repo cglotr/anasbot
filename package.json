@@ -3,13 +3,13 @@
     "node": "12.16.3"
   },
   "name": "anasbot",
-  "version": "0.0.0",
-  "description": "",
+  "version": "1.0.0",
+  "description": "Among Us Discord bot.",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/cglotr/anasbot"
   },
-  "author": "",
+  "author": "cglotr",
   "license": "MIT",
   "scripts": {
     "start": "npm run build && node dist/main.js",
