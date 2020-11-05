@@ -1,8 +1,9 @@
 import Discord from 'discord.js';
+import { DEFAULT_VOICE_CHANNELS } from '../constants';
+import { EnvironmentService } from '../services/environmentservice';
 import { LoggerService } from '../services/loggerservice';
 import { VoiceChannelService } from '../services/voicechannelservice';
 import { VoiceChannel } from '../types/voicechannel';
-import { getEnv } from '../utils/getenv';
 import { RoomManager } from './roommanager';
 
 export class RoomManagerImpl implements RoomManager {
@@ -15,12 +16,13 @@ export class RoomManagerImpl implements RoomManager {
   constructor(
     voiceChannelService: VoiceChannelService,
     loggerService: LoggerService,
+    environmentService: EnvironmentService,
     guild: Discord.Guild,
   ) {
     this.voiceChannelService = voiceChannelService;
     this.loggerService = loggerService;
     this.guild = guild;
-    getEnv(process.env.DEFAULT_VOICE_CHANNELS).forEach((channelID) => {
+    environmentService.getEnvs(DEFAULT_VOICE_CHANNELS).forEach((channelID) => {
       this.addVoiceChannel(channelID);
     });
   }

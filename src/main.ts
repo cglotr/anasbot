@@ -1,5 +1,6 @@
 import Discord from 'discord.js';
 import { config } from 'dotenv';
+import { DISCORD_TOKEN, GUILD_ID } from './constants';
 import { NotificationManager } from './managers/notificationmanager';
 import { NotificationManagerImpl } from './managers/notificationmanagerimpl';
 import { RoomManager } from './managers/roommanager';
@@ -32,7 +33,12 @@ let notificationManager: NotificationManager;
 
 function start(guild: Discord.Guild): void {
   loggerService.info('initializing room manager...');
-  roomManager = new RoomManagerImpl(voiceChannelService, loggerService, guild);
+  roomManager = new RoomManagerImpl(
+    voiceChannelService,
+    loggerService,
+    environmentService,
+    guild,
+  );
 
   loggerService.info('initializing notification manager...');
   notificationManager = new NotificationManagerImpl(
@@ -46,8 +52,9 @@ function start(guild: Discord.Guild): void {
 }
 
 client.on('ready', () => {
-  if (process.env.GUILD_ID) {
-    const guild = client.guilds.resolve(process.env.GUILD_ID);
+  const guildID = environmentService.getEnv(GUILD_ID);
+  if (guildID) {
+    const guild = client.guilds.resolve(guildID);
     if (guild) {
       start(guild);
     }
@@ -266,4 +273,4 @@ client.on('error', (e) => {
   loggerService.error('something went wrong in discord', e.message);
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(environmentService.getEnv(DISCORD_TOKEN));
