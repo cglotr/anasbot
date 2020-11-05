@@ -178,7 +178,9 @@ client.on('message', (msg) => {
       if (!roomManager) {
         return;
       }
-      roomManager.add(splits[1]);
+      const channelID = splits[1];
+      roomManager.add(channelID);
+      msg.reply(`room added to tracked rooms: ${channelID}`);
       break;
     }
     case '-removevoicechannel': {
@@ -188,7 +190,9 @@ client.on('message', (msg) => {
       if (!roomManager) {
         return;
       }
-      roomManager.remove(splits[1]);
+      const channelID = splits[1];
+      roomManager.remove(channelID);
+      msg.reply(`room removed from tracked rooms: ${channelID}`);
       break;
     }
     case '-textchannels': {
