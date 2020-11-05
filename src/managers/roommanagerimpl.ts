@@ -6,11 +6,11 @@ import { getEnv } from '../utils/getenv';
 import { RoomManager } from './roommanager';
 
 export class RoomManagerImpl implements RoomManager {
-  voiceChannelService: VoiceChannelService;
+  private voiceChannelService: VoiceChannelService;
 
-  loggerService: LoggerService;
+  private loggerService: LoggerService;
 
-  guild: Discord.Guild;
+  private guild: Discord.Guild;
 
   constructor(
     voiceChannelService: VoiceChannelService,
@@ -25,16 +25,16 @@ export class RoomManagerImpl implements RoomManager {
     });
   }
 
-  add(channelID: string): void {
+  public add(channelID: string): void {
     this.addVoiceChannel(channelID);
     this.loggerService.info(`voice room added: ${channelID}`);
   }
 
-  listTrackedRooms(): VoiceChannel[] {
+  public listTrackedRooms(): VoiceChannel[] {
     return this.voiceChannelService.list();
   }
 
-  listAvailableRooms(max: number): VoiceChannel[] {
+  public listAvailableRooms(max: number): VoiceChannel[] {
     return this.listTrackedRooms()
       .filter((channel) => {
         const freeSlot = channel.userLimit - channel.userCount;
@@ -46,16 +46,16 @@ export class RoomManagerImpl implements RoomManager {
       .slice(0, max);
   }
 
-  updateRoomUserCount(voiceChannelID: string, userCount: number): void {
+  public updateRoomUserCount(voiceChannelID: string, userCount: number): void {
     this.voiceChannelService.updateUserCount(voiceChannelID, userCount);
   }
 
-  remove(channelID: string): void {
+  public remove(channelID: string): void {
     this.voiceChannelService.remove(channelID);
     this.loggerService.info(`voice room removed: ${channelID}`);
   }
 
-  addVoiceChannel(channelID: string) {
+  private addVoiceChannel(channelID: string) {
     const channel = this.guild.channels.resolve(channelID);
     if (channel && channel instanceof Discord.VoiceChannel) {
       channel

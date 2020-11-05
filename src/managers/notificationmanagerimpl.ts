@@ -7,7 +7,7 @@ import { TextChannel } from '../types/textchannel';
 import { NotificationManager } from './notificationmanager';
 
 export class NotificationManagerImpl implements NotificationManager {
-  textChannelService: TextChannelService;
+  private textChannelService: TextChannelService;
 
   constructor(
     textChannelService: TextChannelService,
@@ -32,19 +32,19 @@ export class NotificationManagerImpl implements NotificationManager {
       });
   }
 
-  add(textChannel: TextChannel): boolean {
+  public add(textChannel: TextChannel): boolean {
     return this.textChannelService.add(textChannel);
   }
 
-  list(): TextChannel[] {
+  public list(): TextChannel[] {
     return this.textChannelService.list();
   }
 
-  remove(textChannel: TextChannel): boolean {
+  public remove(textChannel: TextChannel): boolean {
     return this.textChannelService.remove(textChannel);
   }
 
-  removeByChannelID(textChannelID: string): boolean {
+  public removeByChannelID(textChannelID: string): boolean {
     return this.textChannelService.removeByChannelID(textChannelID);
   }
 }

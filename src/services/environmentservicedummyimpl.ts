@@ -1,7 +1,7 @@
 import { EnvironmentService } from './environmentservice';
 
 export class EnvironmentServiceDummyImpl implements EnvironmentService {
-  getEnv(key: string): string {
+  public getEnv(key: string): string {
     switch (key) {
       case 'DEFAULT_NOTIFICATION_CHANNELS':
         return 'noti-chan-1,noti-chan-2,noti-chan-3';
@@ -16,7 +16,7 @@ export class EnvironmentServiceDummyImpl implements EnvironmentService {
     }
   }
 
-  getEnvs(key: string): string[] {
+  public getEnvs(key: string): string[] {
     switch (key) {
       case 'DEFAULT_NOTIFICATION_CHANNELS':
         return ['noti-chan-1', 'noti-chan-2', 'noti-chan-3'];
