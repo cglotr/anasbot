@@ -30,29 +30,28 @@ const environmentService: EnvironmentService = new EnvironmentServiceImpl();
 let roomManager: RoomManager;
 let notificationManager: NotificationManager;
 
+function start(guild: Discord.Guild): void {
+  loggerService.info(`initializing room manager...`);
+  roomManager = new RoomManagerImpl(voiceChannelService, loggerService, guild);
+
+  loggerService.info(`initializing notification manager...`);
+  notificationManager = new NotificationManagerImpl(
+    new TextChannelServiceImpl(),
+    loggerService,
+    environmentService,
+    guild,
+  );
+
+  loggerService.info(`anasbot started: guild=${guild.id}`);
+}
+
 client.on('ready', () => {
   if (process.env.GUILD_ID) {
     const guild = client.guilds.resolve(process.env.GUILD_ID);
     if (guild) {
-      loggerService.info(`initializing room manager...`);
-      roomManager = new RoomManagerImpl(
-        voiceChannelService,
-        loggerService,
-        guild,
-      );
-
-      loggerService.info(`initializing notification manager...`);
-      notificationManager = new NotificationManagerImpl(
-        new TextChannelServiceImpl(),
-        loggerService,
-        environmentService,
-        guild,
-      );
-
-      loggerService.info(`anasbot started: \`${guild.id}\``);
+      start(guild);
     }
   }
-  loggerService.info('anasbot ready!');
   client.setInterval(() => {
     if (!roomManager) {
       return;
@@ -76,6 +75,7 @@ client.on('ready', () => {
       });
     });
   }, TIME_5_MIN);
+  loggerService.info('anasbot ready!');
 });
 
 client.on('message', (msg) => {
@@ -85,6 +85,13 @@ client.on('message', (msg) => {
   }
   const command = splits[0];
   switch (command) {
+    case '-start': {
+      if (msg.guild) {
+        start(msg.guild);
+        msg.reply(`anasbot started: guild=\`${msg.guild.id}\``);
+      }
+      break;
+    }
     case '-quick':
     case '-q': {
       if (roomManager) {
