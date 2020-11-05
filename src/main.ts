@@ -31,10 +31,10 @@ let roomManager: RoomManager;
 let notificationManager: NotificationManager;
 
 function start(guild: Discord.Guild): void {
-  loggerService.info(`initializing room manager...`);
+  loggerService.info('initializing room manager...');
   roomManager = new RoomManagerImpl(voiceChannelService, loggerService, guild);
 
-  loggerService.info(`initializing notification manager...`);
+  loggerService.info('initializing notification manager...');
   notificationManager = new NotificationManagerImpl(
     new TextChannelServiceImpl(),
     loggerService,
@@ -53,27 +53,27 @@ client.on('ready', () => {
     }
   }
   client.setInterval(() => {
-    if (!roomManager) {
-      return;
-    }
-    const rooms = roomManager.listAvailableRooms(5);
-    if (rooms.length < 1) {
-      return;
-    }
-    if (!notificationManager) {
-      return;
-    }
-    notificationManager.list().forEach((channel) => {
-      client.channels.fetch(channel.id).then((resolvedChannel) => {
-        if (resolvedChannel instanceof Discord.TextChannel) {
-          let content = ``;
-          content += `**Available Game Channels**\n`;
-          content += `_Looking for a quick game? Try using \`-q\` command in any text channel. I will recommend you good room to join!_\n\n`;
-          content += messageStringService.printAvailableGameChannels(rooms);
-          resolvedChannel.send(content);
+    if (roomManager) {
+      const rooms = roomManager.listAvailableRooms(5);
+      if (rooms.length > 0) {
+        if (notificationManager) {
+          notificationManager.list().forEach((channel) => {
+            client.channels.fetch(channel.id).then((resolvedChannel) => {
+              if (resolvedChannel instanceof Discord.TextChannel) {
+                let content = '';
+                content += '**Available Game Channels**\n';
+                content +=
+                  '_Looking for a quick game? Try using `-q` command in any text channel. I will recommend you good room to join!_\n\n';
+                content += messageStringService.printAvailableGameChannels(
+                  rooms,
+                );
+                resolvedChannel.send(content);
+              }
+            });
+          });
         }
-      });
-    });
+      }
+    }
   }, TIME_5_MIN);
   loggerService.info('anasbot ready!');
 });
@@ -84,6 +84,7 @@ client.on('message', (msg) => {
     return;
   }
   const command = splits[0];
+  const arg1 = splits.length > 1 ? splits[1] : '';
   switch (command) {
     case '-start': {
       if (msg.guild) {
@@ -95,11 +96,11 @@ client.on('message', (msg) => {
     case '-quick':
     case '-q': {
       if (roomManager) {
-        msg.reply(`looking for available game...`);
+        msg.reply('looking for available game...');
         const rooms = roomManager.listAvailableRooms(1);
         if (rooms.length < 1) {
           msg.channel.send(
-            `Looks like no room is looking for players right now. Why don't you start one :)`,
+            'Looks like no room is looking for players right now :(',
           );
           break;
         } else {
@@ -111,26 +112,24 @@ client.on('message', (msg) => {
       break;
     }
     case '-alert': {
-      if (!notificationManager) {
-        return;
+      if (notificationManager) {
+        msg.channel.fetch().then((channel) => {
+          if (channel instanceof Discord.TextChannel) {
+            notificationManager.add({
+              id: channel.id,
+              name: channel.name,
+            });
+            msg.reply('room added to alerts');
+          }
+        });
       }
-      msg.channel.fetch().then((channel) => {
-        if (channel instanceof Discord.TextChannel) {
-          notificationManager.add({
-            id: channel.id,
-            name: channel.name,
-          });
-          msg.reply(`room added to alerts`);
-        }
-      });
       break;
     }
     case '-unalert': {
-      if (!notificationManager) {
-        return;
+      if (notificationManager) {
+        notificationManager.removeByChannelID(msg.channel.id);
+        msg.reply(`room removed from alerts`);
       }
-      notificationManager.removeByChannelID(msg.channel.id);
-      msg.reply(`room removed from alerts`);
       break;
     }
     case '-info': {
@@ -172,27 +171,23 @@ client.on('message', (msg) => {
       break;
     }
     case '-addvoicechannel': {
-      if (splits.length <= 1) {
-        return;
+      if (roomManager) {
+        if (arg1) {
+          const channelID = arg1;
+          roomManager.add(channelID);
+          msg.reply(`room added to tracked rooms: ${channelID}`);
+        }
       }
-      if (!roomManager) {
-        return;
-      }
-      const channelID = splits[1];
-      roomManager.add(channelID);
-      msg.reply(`room added to tracked rooms: ${channelID}`);
       break;
     }
     case '-removevoicechannel': {
-      if (splits.length <= 1) {
-        return;
+      if (roomManager) {
+        if (arg1) {
+          const channelID = arg1;
+          roomManager.remove(channelID);
+          msg.reply(`room removed from tracked rooms: ${channelID}`);
+        }
       }
-      if (!roomManager) {
-        return;
-      }
-      const channelID = splits[1];
-      roomManager.remove(channelID);
-      msg.reply(`room removed from tracked rooms: ${channelID}`);
       break;
     }
     case '-textchannels': {
@@ -212,35 +207,33 @@ client.on('message', (msg) => {
       break;
     }
     case '-addtextchannel': {
-      if (!notificationManager) {
-        return;
-      }
-      if (splits.length > 1) {
-        const channelID = splits[1];
-        if (msg.guild) {
-          const channel = msg.guild.channels.resolve(channelID);
-          if (channel) {
-            notificationManager.add({
-              id: channel.id,
-              name: channel.name,
-            });
-            msg.reply(`room added to alerts: ${channel.id}`);
+      if (notificationManager) {
+        if (arg1) {
+          const channelID = arg1;
+          if (msg.guild) {
+            const channel = msg.guild.channels.resolve(channelID);
+            if (channel) {
+              notificationManager.add({
+                id: channel.id,
+                name: channel.name,
+              });
+              msg.reply(`room added to alerts: ${channel.id}`);
+            }
           }
         }
       }
       break;
     }
     case '-removetextchannel': {
-      if (!notificationManager) {
-        return;
-      }
-      if (splits.length > 1) {
-        const channelID = splits[1];
-        if (msg.guild) {
-          const channel = msg.guild.channels.resolve(channelID);
-          if (channel) {
-            notificationManager.removeByChannelID(channel.id);
-            msg.reply(`room removed from alerts: ${channel.id}`);
+      if (notificationManager) {
+        if (arg1) {
+          const channelID = arg1;
+          if (msg.guild) {
+            const channel = msg.guild.channels.resolve(channelID);
+            if (channel) {
+              notificationManager.removeByChannelID(channel.id);
+              msg.reply(`room removed from alerts: ${channel.id}`);
+            }
           }
         }
       }
