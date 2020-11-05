@@ -3,7 +3,7 @@ import { VoiceChannel } from '../types/voicechannel';
 import { MessageStringService } from './messagestringservice';
 
 export class MessageStringServiceImpl implements MessageStringService {
-  printNotificationChannels(channels: Array<TextChannel>): string {
+  public printNotificationChannels(channels: Array<TextChannel>): string {
     let message = '**Notification Channels:**\n';
     channels.forEach((channel) => {
       message += `- ${channel.name}\n`;
@@ -14,7 +14,7 @@ export class MessageStringServiceImpl implements MessageStringService {
     return message;
   }
 
-  printGameChannels(channels: Array<VoiceChannel>): string {
+  public printGameChannels(channels: Array<VoiceChannel>): string {
     let message = '**Among Us Channels:**\n';
     channels
       .sort((a, b) => a.position - b.position)
@@ -27,7 +27,7 @@ export class MessageStringServiceImpl implements MessageStringService {
     return message;
   }
 
-  printAvailableGameChannels(channels: Array<VoiceChannel>): string {
+  public printAvailableGameChannels(channels: Array<VoiceChannel>): string {
     let message = ``;
     channels
       .sort((a, b) => a.position - b.position)
@@ -42,21 +42,21 @@ export class MessageStringServiceImpl implements MessageStringService {
     return message;
   }
 
-  printRoomSlot(channel: VoiceChannel): string {
+  public printRoomSlot(channel: VoiceChannel): string {
     return `\`[${channel.userCount
       .toString()
       .padStart(2, '0')}/${channel.userLimit.toString().padStart(2, '0')}]\``;
   }
 
-  printTextChannels(channels: TextChannel[]): string {
+  public printTextChannels(channels: TextChannel[]): string {
     return `**Text Channels:**\n${this.printChannels(channels)}`;
   }
 
-  printVoiceChannels(channels: VoiceChannel[]): string {
+  public printVoiceChannels(channels: VoiceChannel[]): string {
     return `**Voice Channels:**\n${this.printChannels(channels)}`;
   }
 
-  printChannels(channels: { name: string; id: string }[]): string {
+  private printChannels(channels: { name: string; id: string }[]): string {
     let message = ``;
     channels.forEach((channel) => {
       message += `- ${channel.name}: \`${channel.id}\`\n`;

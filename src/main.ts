@@ -1,12 +1,15 @@
 import Discord from 'discord.js';
 import { config } from 'dotenv';
+import { NotificationManager } from './managers/notificationmanager';
+import { NotificationManagerImpl } from './managers/notificationmanagerimpl';
 import { RoomManager } from './managers/roommanager';
 import { RoomManagerImpl } from './managers/roommanagerimpl';
+import { EnvironmentService } from './services/environmentservice';
+import { EnvironmentServiceImpl } from './services/environmentserviceimpl';
 import { LoggerService } from './services/loggerservice';
 import { LoggerServiceImpl } from './services/loggerserviceimpl';
 import { MessageStringService } from './services/messagestringservice';
 import { MessageStringServiceImpl } from './services/messagestringserviceimpl';
-import { TextChannelService } from './services/textchannelservice';
 import { TextChannelServiceImpl } from './services/textchannelserviceimpl';
 import { VoiceChannelService } from './services/voicechannelservice';
 import { VoiceChannelServiceImpl } from './services/voicechannelserviceimpl';
@@ -21,62 +24,58 @@ const client = new Discord.Client();
 
 const loggerService: LoggerService = new LoggerServiceImpl();
 const messageStringService: MessageStringService = new MessageStringServiceImpl();
-const textChannelService: TextChannelService = new TextChannelServiceImpl();
 const voiceChannelService: VoiceChannelService = new VoiceChannelServiceImpl();
+const environmentService: EnvironmentService = new EnvironmentServiceImpl();
 
 let roomManager: RoomManager;
+let notificationManager: NotificationManager;
 
-loggerService.info(`discord token: ${process.env.DISCORD_TOKEN}`);
+function start(guild: Discord.Guild): void {
+  loggerService.info('initializing room manager...');
+  roomManager = new RoomManagerImpl(voiceChannelService, loggerService, guild);
+
+  loggerService.info('initializing notification manager...');
+  notificationManager = new NotificationManagerImpl(
+    new TextChannelServiceImpl(),
+    loggerService,
+    environmentService,
+    guild,
+  );
+
+  loggerService.info(`anasbot started: guild=${guild.id}`);
+}
 
 client.on('ready', () => {
   if (process.env.GUILD_ID) {
     const guild = client.guilds.resolve(process.env.GUILD_ID);
     if (guild) {
-      roomManager = new RoomManagerImpl(
-        voiceChannelService,
-        loggerService,
-        guild,
-      );
-      if (process.env.DEFAULT_NOTIFICATION_CHANNELS) {
-        const defaultNotificationChannelIDs = process.env.DEFAULT_NOTIFICATION_CHANNELS.split(
-          ',',
-        );
-        defaultNotificationChannelIDs.forEach((channelID) => {
-          const channel = guild.channels.resolve(channelID);
-          if (channel instanceof Discord.TextChannel) {
-            textChannelService.add({
-              id: channel.id,
-              name: channel.name,
-            });
-            loggerService.info(
-              `room added to alerts: id=${channel.id}, name=${channel.name}`,
-            );
-          }
-        });
-      }
-      loggerService.info(`anasbot started: \`${guild.id}\``);
+      start(guild);
     }
   }
-  loggerService.info('anasbot ready!');
   client.setInterval(() => {
     if (roomManager) {
       const rooms = roomManager.listAvailableRooms(5);
-      if (rooms.length < 1) {
-        return;
+      if (rooms.length > 0) {
+        if (notificationManager) {
+          notificationManager.list().forEach((channel) => {
+            client.channels.fetch(channel.id).then((resolvedChannel) => {
+              if (resolvedChannel instanceof Discord.TextChannel) {
+                let content = '';
+                content += '**Available Game Channels**\n';
+                content +=
+                  '_Looking for a quick game? Try using `-q` command in any text channel. I will recommend you good room to join!_\n\n';
+                content += messageStringService.printAvailableGameChannels(
+                  rooms,
+                );
+                resolvedChannel.send(content);
+              }
+            });
+          });
+        }
       }
-      textChannelService.list().forEach((channel) => {
-        client.channels.fetch(channel.id).then((resolvedChannel) => {
-          if (resolvedChannel instanceof Discord.TextChannel) {
-            let content = ``;
-            content += `**Available Game Channels**\n`;
-            content += `_Looking for a quick game? Try using \`-q\` command in any text channel. I will recommend you good room to join!_\n\n`;
-            content += messageStringService.printAvailableGameChannels(rooms);
-            resolvedChannel.send(content);
-          }
-        });
-      });
     }
   }, TIME_5_MIN);
+  loggerService.info('anasbot ready!');
 });
 
 client.on('message', (msg) => {
@@ -85,45 +84,23 @@ client.on('message', (msg) => {
     return;
   }
   const command = splits[0];
+  const arg1 = splits.length > 1 ? splits[1] : '';
   switch (command) {
     case '-start': {
       if (msg.guild) {
-        roomManager = new RoomManagerImpl(
-          voiceChannelService,
-          loggerService,
-          msg.guild,
-        );
-        if (process.env.DEFAULT_NOTIFICATION_CHANNELS) {
-          const defaultNotificationChannelIDs = process.env.DEFAULT_NOTIFICATION_CHANNELS.split(
-            ',',
-          );
-          defaultNotificationChannelIDs.forEach((channelID) => {
-            if (msg.guild) {
-              const channel = msg.guild.channels.resolve(channelID);
-              if (channel instanceof Discord.TextChannel) {
-                textChannelService.add({
-                  id: channel.id,
-                  name: channel.name,
-                });
-                loggerService.info(
-                  `room added to alerts: id=${channel.id}, name=${channel.name}`,
-                );
-              }
-            }
-          });
-        }
-        msg.reply(`anasbot started: \`${msg.guild.id}\``);
+        start(msg.guild);
+        msg.reply(`anasbot started: guild=\`${msg.guild.id}\``);
       }
       break;
     }
     case '-quick':
     case '-q': {
       if (roomManager) {
-        msg.reply(`looking for available game...`);
+        msg.reply('looking for available game...');
         const rooms = roomManager.listAvailableRooms(1);
         if (rooms.length < 1) {
           msg.channel.send(
-            `Looks like no room is looking for players right now. Why don't you start one :)`,
+            'Looks like no room is looking for players right now :(',
           );
           break;
         } else {
@@ -135,34 +112,39 @@ client.on('message', (msg) => {
       break;
     }
     case '-alert': {
-      msg.channel.fetch().then((channel) => {
-        if (channel instanceof Discord.TextChannel) {
-          textChannelService.add({
-            id: channel.id,
-            name: channel.name,
-          });
-          msg.reply(`room added to alerts`);
-        }
-      });
+      if (notificationManager) {
+        msg.channel.fetch().then((channel) => {
+          if (channel instanceof Discord.TextChannel) {
+            notificationManager.add({
+              id: channel.id,
+              name: channel.name,
+            });
+            msg.reply('room added to alerts');
+          }
+        });
+      }
       break;
     }
     case '-unalert': {
-      textChannelService.removeByChannelID(msg.channel.id);
-      msg.reply(`room removed from alerts`);
+      if (notificationManager) {
+        notificationManager.removeByChannelID(msg.channel.id);
+        msg.reply(`room removed from alerts`);
+      }
       break;
     }
     case '-info': {
-      if (!roomManager) {
-        return;
-      }
       msg.reply(`retrieving bot info...`);
       let info = ``;
-      info += messageStringService.printGameChannels(
-        roomManager.listTrackedRooms(),
-      );
-      info += messageStringService.printNotificationChannels(
-        textChannelService.list(),
-      );
+      if (roomManager) {
+        info += messageStringService.printGameChannels(
+          roomManager.listTrackedRooms(),
+        );
+      }
+      if (notificationManager) {
+        info += messageStringService.printNotificationChannels(
+          notificationManager.list(),
+        );
+      }
       msg.channel.send(info);
       break;
     }
@@ -189,9 +171,23 @@ client.on('message', (msg) => {
       break;
     }
     case '-addvoicechannel': {
+      if (roomManager) {
+        if (arg1) {
+          const channelID = arg1;
+          roomManager.add(channelID);
+          msg.reply(`room added to tracked rooms: ${channelID}`);
+        }
+      }
       break;
     }
     case '-removevoicechannel': {
+      if (roomManager) {
+        if (arg1) {
+          const channelID = arg1;
+          roomManager.remove(channelID);
+          msg.reply(`room removed from tracked rooms: ${channelID}`);
+        }
+      }
       break;
     }
     case '-textchannels': {
@@ -211,29 +207,33 @@ client.on('message', (msg) => {
       break;
     }
     case '-addtextchannel': {
-      if (splits.length > 1) {
-        const channelID = splits[1];
-        if (msg.guild) {
-          const channel = msg.guild.channels.resolve(channelID);
-          if (channel) {
-            textChannelService.add({
-              id: channel.id,
-              name: channel.name,
-            });
-            msg.reply(`room added to alerts: ${channel.id}`);
+      if (notificationManager) {
+        if (arg1) {
+          const channelID = arg1;
+          if (msg.guild) {
+            const channel = msg.guild.channels.resolve(channelID);
+            if (channel) {
+              notificationManager.add({
+                id: channel.id,
+                name: channel.name,
+              });
+              msg.reply(`room added to alerts: ${channel.id}`);
+            }
           }
         }
       }
       break;
     }
     case '-removetextchannel': {
-      if (splits.length > 1) {
-        const channelID = splits[1];
-        if (msg.guild) {
-          const channel = msg.guild.channels.resolve(channelID);
-          if (channel) {
-            textChannelService.removeByChannelID(channel.id);
-            msg.reply(`room removed from alerts: ${channel.id}`);
+      if (notificationManager) {
+        if (arg1) {
+          const channelID = arg1;
+          if (msg.guild) {
+            const channel = msg.guild.channels.resolve(channelID);
+            if (channel) {
+              notificationManager.removeByChannelID(channel.id);
+              msg.reply(`room removed from alerts: ${channel.id}`);
+            }
           }
         }
       }
