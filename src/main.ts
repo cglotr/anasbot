@@ -31,7 +31,7 @@ const environmentService: EnvironmentService = new EnvironmentServiceImpl();
 let roomManager: RoomManager;
 let notificationManager: NotificationManager;
 
-function start(guild: Discord.Guild): void {
+function start(guild: any): void {
   loggerService.info('initializing room manager...');
   roomManager = new RoomManagerImpl(
     voiceChannelService,

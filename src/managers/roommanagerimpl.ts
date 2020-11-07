@@ -1,5 +1,5 @@
-import Discord from 'discord.js';
 import { DEFAULT_VOICE_CHANNELS } from '../constants';
+import { DiscordGuild } from '../discord/discordguild';
 import { EnvironmentService } from '../services/environmentservice';
 import { LoggerService } from '../services/loggerservice';
 import { VoiceChannelService } from '../services/voicechannelservice';
@@ -11,13 +11,13 @@ export class RoomManagerImpl implements RoomManager {
 
   private loggerService: LoggerService;
 
-  private guild: Discord.Guild;
+  private guild: DiscordGuild;
 
   constructor(
     voiceChannelService: VoiceChannelService,
     loggerService: LoggerService,
     environmentService: EnvironmentService,
-    guild: Discord.Guild,
+    guild: DiscordGuild,
   ) {
     this.voiceChannelService = voiceChannelService;
     this.loggerService = loggerService;
@@ -59,7 +59,7 @@ export class RoomManagerImpl implements RoomManager {
 
   private addVoiceChannel(channelID: string) {
     const channel = this.guild.channels.resolve(channelID);
-    if (channel && channel instanceof Discord.VoiceChannel) {
+    if (channel && channel.type === 'voice') {
       channel
         .createInvite({ maxAge: 0 })
         .then((invite) => {
