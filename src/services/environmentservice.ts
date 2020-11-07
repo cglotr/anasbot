@@ -1,4 +1,6 @@
 export interface EnvironmentService {
-  getEnv(key: string): string;
-  getEnvs(key: string): string[];
+  getDiscordToken(): string;
+  getGuildID(): string;
+  getDefaultNotificationChannels(): string[];
+  getDefaultVoiceChannels(): string[];
 }

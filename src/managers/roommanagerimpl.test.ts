@@ -1,7 +1,6 @@
 import { DiscordGuild } from '../discord/discordguild';
 import { DiscordInvite } from '../discord/discordinvite';
 import { DiscordVoiceChannel } from '../discord/discordvoicechannel';
-import { EnvironmentServiceImpl } from '../services/environmentserviceimpl';
 import { LoggerServiceImpl } from '../services/loggerserviceimpl';
 import { VoiceChannelServiceImpl } from '../services/voicechannelserviceimpl';
 import { wait } from '../utils/wait';
@@ -27,7 +26,6 @@ describe('RoomManagerImpl', () => {
       },
       userLimit: 10,
       position: 0,
-      type: 'voice',
       createInvite: jest.fn(async () => {
         return new Promise((resolve) => {
           resolve(discordInvite);
@@ -35,6 +33,7 @@ describe('RoomManagerImpl', () => {
       }),
     };
     discordGuild = {
+      id: 'guild-id',
       channels: {
         resolve: jest.fn(() => {
           return discordVoiceChannel;
@@ -43,8 +42,17 @@ describe('RoomManagerImpl', () => {
     };
     roomManager = new RoomManagerImpl(
       new VoiceChannelServiceImpl(),
+      {
+        getDiscordVoiceChannel: jest.fn(() => discordVoiceChannel),
+        getDiscordTextChannel: jest.fn(),
+      },
       new LoggerServiceImpl(),
-      new EnvironmentServiceImpl(),
+      {
+        getDiscordToken: jest.fn(),
+        getGuildID: jest.fn(),
+        getDefaultNotificationChannels: jest.fn(),
+        getDefaultVoiceChannels: jest.fn(() => ['channel-id']),
+      },
       discordGuild,
     );
   });

@@ -1,5 +1,5 @@
-import { DEFAULT_VOICE_CHANNELS } from '../constants';
 import { DiscordGuild } from '../discord/discordguild';
+import { DiscordService } from '../services/discordservice';
 import { EnvironmentService } from '../services/environmentservice';
 import { LoggerService } from '../services/loggerservice';
 import { VoiceChannelService } from '../services/voicechannelservice';
@@ -9,20 +9,24 @@ import { RoomManager } from './roommanager';
 export class RoomManagerImpl implements RoomManager {
   private voiceChannelService: VoiceChannelService;
 
+  private discordService: DiscordService;
+
   private loggerService: LoggerService;
 
   private guild: DiscordGuild;
 
   constructor(
     voiceChannelService: VoiceChannelService,
+    discordService: DiscordService,
     loggerService: LoggerService,
     environmentService: EnvironmentService,
     guild: DiscordGuild,
   ) {
     this.voiceChannelService = voiceChannelService;
+    this.discordService = discordService;
     this.loggerService = loggerService;
     this.guild = guild;
-    environmentService.getEnvs(DEFAULT_VOICE_CHANNELS).forEach((channelID) => {
+    environmentService.getDefaultVoiceChannels().forEach((channelID) => {
       this.addVoiceChannel(channelID);
     });
   }
@@ -58,8 +62,10 @@ export class RoomManagerImpl implements RoomManager {
   }
 
   private addVoiceChannel(channelID: string) {
-    const channel = this.guild.channels.resolve(channelID);
-    if (channel && channel.type === 'voice') {
+    const channel = this.discordService.getDiscordVoiceChannel(
+      this.guild.channels.resolve(channelID),
+    );
+    if (channel) {
       channel
         .createInvite({ maxAge: 0 })
         .then((invite) => {

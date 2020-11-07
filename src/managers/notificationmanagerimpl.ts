@@ -1,5 +1,5 @@
-import Discord from 'discord.js';
-import { DEFAULT_NOTIFICATION_CHANNELS } from '../constants';
+import { DiscordGuild } from '../discord/discordguild';
+import { DiscordService } from '../services/discordservice';
 import { EnvironmentService } from '../services/environmentservice';
 import { LoggerService } from '../services/loggerservice';
 import { TextChannelService } from '../services/textchannelservice';
@@ -11,25 +11,26 @@ export class NotificationManagerImpl implements NotificationManager {
 
   constructor(
     textChannelService: TextChannelService,
+    discordService: DiscordService,
     loggerService: LoggerService,
     environmentService: EnvironmentService,
-    guild: Discord.Guild,
+    guild: DiscordGuild,
   ) {
     this.textChannelService = textChannelService;
-    environmentService
-      .getEnvs(DEFAULT_NOTIFICATION_CHANNELS)
-      .forEach((channelID) => {
-        const channel = guild.channels.resolve(channelID);
-        if (channel instanceof Discord.TextChannel) {
-          this.textChannelService.add({
-            id: channel.id,
-            name: channel.name,
-          });
-          loggerService.info(
-            `room added to alerts: id=${channel.id}, name=${channel.name}`,
-          );
-        }
-      });
+    environmentService.getDefaultNotificationChannels().forEach((channelID) => {
+      const channel = discordService.getDiscordTextChannel(
+        guild.channels.resolve(channelID),
+      );
+      if (channel) {
+        this.textChannelService.add({
+          id: channel.id,
+          name: channel.name,
+        });
+        loggerService.info(
+          `room added to alerts: id=${channel.id}, name=${channel.name}`,
+        );
+      }
+    });
   }
 
   public add(textChannel: TextChannel): boolean {

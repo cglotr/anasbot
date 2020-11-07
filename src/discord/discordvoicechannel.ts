@@ -8,6 +8,5 @@ export interface DiscordVoiceChannel {
   };
   userLimit: number;
   position: number;
-  type: string;
   createInvite(options?: { maxAge: number }): Promise<DiscordInvite>;
 }

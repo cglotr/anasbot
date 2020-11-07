@@ -1,10 +1,11 @@
 import Discord from 'discord.js';
 import { config } from 'dotenv';
-import { DISCORD_TOKEN, GUILD_ID } from './constants';
+import { DiscordGuild } from './discord/discordguild';
 import { NotificationManager } from './managers/notificationmanager';
 import { NotificationManagerImpl } from './managers/notificationmanagerimpl';
 import { RoomManager } from './managers/roommanager';
 import { RoomManagerImpl } from './managers/roommanagerimpl';
+import { DiscordServiceImpl } from './services/discordserviceimpl';
 import { EnvironmentService } from './services/environmentservice';
 import { EnvironmentServiceImpl } from './services/environmentserviceimpl';
 import { LoggerService } from './services/loggerservice';
@@ -31,10 +32,11 @@ const environmentService: EnvironmentService = new EnvironmentServiceImpl();
 let roomManager: RoomManager;
 let notificationManager: NotificationManager;
 
-function start(guild: any): void {
+function start(guild: DiscordGuild): void {
   loggerService.info('initializing room manager...');
   roomManager = new RoomManagerImpl(
     voiceChannelService,
+    new DiscordServiceImpl(),
     loggerService,
     environmentService,
     guild,
@@ -43,6 +45,7 @@ function start(guild: any): void {
   loggerService.info('initializing notification manager...');
   notificationManager = new NotificationManagerImpl(
     new TextChannelServiceImpl(),
+    new DiscordServiceImpl(),
     loggerService,
     environmentService,
     guild,
@@ -52,7 +55,7 @@ function start(guild: any): void {
 }
 
 client.on('ready', () => {
-  const guildID = environmentService.getEnv(GUILD_ID);
+  const guildID = environmentService.getGuildID();
   if (guildID) {
     const guild = client.guilds.resolve(guildID);
     if (guild) {
@@ -273,4 +276,4 @@ client.on('error', (e) => {
   loggerService.error('something went wrong in discord', e.message);
 });
 
-client.login(environmentService.getEnv(DISCORD_TOKEN));
+client.login(environmentService.getDiscordToken());
