@@ -56,6 +56,10 @@ describe('MessageStringServiceImpl', () => {
   });
 
   test('printNotificationChannels()', () => {
+    expect(messageStringService.printNotificationChannels([])).toEqual(
+      '**Notification Channels:**\n_None_',
+    );
+
     const actual = messageStringService.printNotificationChannels(textChannels);
     expect(actual).toEqual(
       '**Notification Channels:**\n- text-channel-1\n- text-channel-2\n',
@@ -63,6 +67,10 @@ describe('MessageStringServiceImpl', () => {
   });
 
   test('printGameChannels()', () => {
+    expect(messageStringService.printGameChannels([])).toEqual(
+      '**Among Us Channels:**\n_None_',
+    );
+
     const actual = messageStringService.printGameChannels(voiceChannels);
     expect(actual).toEqual(
       '**Among Us Channels:**\n- voice-channel-1: `1`\n- voice-channel-2: `2`\n- voice-channel-3: `3`\n- voice-channel-4: `4`\n',
@@ -70,6 +78,10 @@ describe('MessageStringServiceImpl', () => {
   });
 
   test('printAvailableGameChannels()', () => {
+    expect(messageStringService.printAvailableGameChannels([])).toEqual(
+      '_None_',
+    );
+
     const actual = messageStringService.printAvailableGameChannels(
       voiceChannels,
     );
@@ -79,6 +91,10 @@ describe('MessageStringServiceImpl', () => {
   });
 
   test('printTextChannels()', () => {
+    expect(messageStringService.printTextChannels([])).toEqual(
+      '**Text Channels:**\n_None_',
+    );
+
     const actual = messageStringService.printTextChannels(textChannels);
     expect(actual).toEqual(
       '**Text Channels:**\n- text-channel-1: `1`\n- text-channel-2: `2`\n',
@@ -86,6 +102,10 @@ describe('MessageStringServiceImpl', () => {
   });
 
   test('printVoiceChannels()', () => {
+    expect(messageStringService.printVoiceChannels([])).toEqual(
+      '**Voice Channels:**\n_None_',
+    );
+
     const actual = messageStringService.printVoiceChannels(voiceChannels);
     expect(actual).toEqual(
       '**Voice Channels:**\n- voice-channel-1: `1`\n- voice-channel-2: `2`\n- voice-channel-3: `3`\n- voice-channel-4: `4`\n',
