@@ -22,7 +22,7 @@ describe('RoomManagerImpl', () => {
       id: 'channel-id',
       name: 'channel-name',
       members: {
-        size: 9,
+        size: 0,
       },
       userLimit: 10,
       position: 0,
@@ -69,7 +69,7 @@ describe('RoomManagerImpl', () => {
     expect(roomManager.listTrackedRooms()[0]).toEqual({
       id: 'channel-id',
       name: 'channel-name',
-      userCount: 9,
+      userCount: 0,
       userLimit: 10,
       link: 'discord-invite-url',
       position: 0,
@@ -79,5 +79,22 @@ describe('RoomManagerImpl', () => {
     await wait();
 
     expect(roomManager.listTrackedRooms().length).toBe(0);
+  });
+
+  it('should update room user count & show room as available', async () => {
+    roomManager.add('channel-id');
+    await wait();
+
+    expect(roomManager.listAvailableRooms(1).length).toBe(0);
+
+    roomManager.updateRoomUserCount('not-found', 9);
+    await wait();
+
+    expect(roomManager.listAvailableRooms(1).length).toBe(0);
+
+    roomManager.updateRoomUserCount('channel-id', 9);
+    await wait();
+
+    expect(roomManager.listAvailableRooms(1).length).toBe(1);
   });
 });

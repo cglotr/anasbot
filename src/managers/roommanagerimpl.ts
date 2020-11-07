@@ -66,24 +66,19 @@ export class RoomManagerImpl implements RoomManager {
       this.guild.channels.resolve(channelID),
     );
     if (channel) {
-      channel
-        .createInvite({ maxAge: 0 })
-        .then((invite) => {
-          this.voiceChannelService.add({
-            id: channel.id,
-            name: channel.name,
-            userCount: channel.members.size,
-            userLimit: channel.userLimit,
-            link: invite.url,
-            position: channel.position,
-          });
-          this.loggerService.info(
-            `added room to game channels: id=${channel.id}, name=${channel.name}`,
-          );
-        })
-        .catch((err) => {
-          this.loggerService.error(`error creating invite`, err);
+      channel.createInvite({ maxAge: 0 }).then((invite) => {
+        this.voiceChannelService.add({
+          id: channel.id,
+          name: channel.name,
+          userCount: channel.members.size,
+          userLimit: channel.userLimit,
+          link: invite.url,
+          position: channel.position,
         });
+        this.loggerService.info(
+          `added room to game channels: id=${channel.id}, name=${channel.name}`,
+        );
+      });
     }
   }
 }
