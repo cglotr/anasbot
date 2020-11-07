@@ -65,6 +65,9 @@ describe('NotificationManagerImpl', () => {
     notificationManager.add(discordTextChannel);
     expect(notificationManager.list().length).toBe(1);
 
+    notificationManager.removeByChannelID('not-found');
+    expect(notificationManager.list().length).toBe(1);
+
     notificationManager.removeByChannelID(discordTextChannel.id);
     expect(notificationManager.list().length).toBe(0);
   });
