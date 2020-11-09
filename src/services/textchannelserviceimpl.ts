@@ -22,10 +22,6 @@ export class TextChannelServiceImpl implements TextChannelService {
   }
 
   public removeByChannelID(channelID: string): boolean {
-    if (!this.channels.has(channelID)) {
-      return false;
-    }
-    this.channels.delete(channelID);
-    return true;
+    return this.channels.delete(channelID);
   }
 }
