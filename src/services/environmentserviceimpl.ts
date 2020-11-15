@@ -1,6 +1,7 @@
 import {
   ALERT_INTERVAL,
   DEFAULT_NOTIFICATION_CHANNELS,
+  DEFAULT_QUICK_CHANNELS,
   DEFAULT_VOICE_CHANNELS,
   DISCORD_TOKEN,
   GUILD_ID,
@@ -23,6 +24,10 @@ export class EnvironmentServiceImpl implements EnvironmentService {
 
   public getDefaultVoiceChannels(): string[] {
     return this.getEnvs(DEFAULT_VOICE_CHANNELS);
+  }
+
+  public getDefaultQuickChannels(): string[] {
+    return this.getEnvs(DEFAULT_QUICK_CHANNELS);
   }
 
   public getAlertInterval(): number {

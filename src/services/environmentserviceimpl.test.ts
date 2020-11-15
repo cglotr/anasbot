@@ -1,6 +1,7 @@
 import {
   ALERT_INTERVAL,
   DEFAULT_NOTIFICATION_CHANNELS,
+  DEFAULT_QUICK_CHANNELS,
   DEFAULT_VOICE_CHANNELS,
   DISCORD_TOKEN,
   GUILD_ID,
@@ -54,5 +55,17 @@ describe('EnvironmentServiceImpl', () => {
 
     process.env[ALERT_INTERVAL] = '300';
     expect(environmentService.getAlertInterval()).toEqual(300);
+  });
+
+  test('getDefaultQuickChannels()', () => {
+    delete process.env[DEFAULT_QUICK_CHANNELS];
+    expect(environmentService.getDefaultQuickChannels()).toEqual([]);
+
+    process.env[DEFAULT_QUICK_CHANNELS] =
+      'default-quick-channel-1,default-quick-channel-2';
+    expect(environmentService.getDefaultQuickChannels()).toEqual([
+      'default-quick-channel-1',
+      'default-quick-channel-2',
+    ]);
   });
 });

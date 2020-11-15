@@ -3,5 +3,6 @@ export interface EnvironmentService {
   getGuildID(): string;
   getDefaultNotificationChannels(): string[];
   getDefaultVoiceChannels(): string[];
+  getDefaultQuickChannels(): string[];
   getAlertInterval(): number;
 }

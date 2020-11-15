@@ -56,6 +56,10 @@ export class MessageStringServiceImpl implements MessageStringService {
     return `**Voice Channels:**\n${this.printChannels(channels)}`;
   }
 
+  public printQuickChannels(channels: VoiceChannel[]): string {
+    return `**Quick Channels:**\n${this.printChannels(channels)}`;
+  }
+
   private printChannels(channels: { name: string; id: string }[]): string {
     let message = ``;
     channels.forEach((channel) => {

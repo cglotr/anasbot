@@ -8,4 +8,5 @@ export interface MessageStringService {
   printRoomSlot(channel: VoiceChannel): string;
   printTextChannels(channels: TextChannel[]): string;
   printVoiceChannels(channels: VoiceChannel[]): string;
+  printQuickChannels(channels: TextChannel[]): string;
 }

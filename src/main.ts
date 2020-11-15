@@ -3,6 +3,8 @@ import { config } from 'dotenv';
 import { DiscordGuild } from './discord/discordguild';
 import { NotificationManager } from './managers/notificationmanager';
 import { NotificationManagerImpl } from './managers/notificationmanagerimpl';
+import { QuickManager } from './managers/quickmanager';
+import { QuickManagerImpl } from './managers/quickmanagerimpl';
 import { RoomManager } from './managers/roommanager';
 import { RoomManagerImpl } from './managers/roommanagerimpl';
 import { DiscordServiceImpl } from './services/discordserviceimpl';
@@ -29,6 +31,7 @@ const environmentService: EnvironmentService = new EnvironmentServiceImpl();
 
 let roomManager: RoomManager;
 let notificationManager: NotificationManager;
+let quickManager: QuickManager;
 
 function start(guild: DiscordGuild): void {
   loggerService.info('initializing room manager...');
@@ -42,6 +45,15 @@ function start(guild: DiscordGuild): void {
 
   loggerService.info('initializing notification manager...');
   notificationManager = new NotificationManagerImpl(
+    new TextChannelServiceImpl(),
+    new DiscordServiceImpl(),
+    loggerService,
+    environmentService,
+    guild,
+  );
+
+  loggerService.info('initializing quick manager...');
+  quickManager = new QuickManagerImpl(
     new TextChannelServiceImpl(),
     new DiscordServiceImpl(),
     loggerService,
@@ -70,12 +82,16 @@ client.on('ready', () => {
             client.channels.fetch(channel.id).then((resolvedChannel) => {
               if (resolvedChannel instanceof Discord.TextChannel) {
                 let content = '';
-                content += '**Available Game Channels**\n';
+                content += ':christmas_tree:\n\n';
+                content += '**Available Game Channels** :tada: :tada: :tada:\n';
                 content +=
-                  '_Looking for a quick game? Try using `-q` command in any text channel. I will recommend you good room to join!_\n\n';
+                  '_Looking for a quick game? Try using `-q` command._\n\n';
                 content += messageStringService.printAvailableGameChannels(
                   rooms,
                 );
+                content += '\n';
+                content +=
+                  'https://tenor.com/view/christmas-snow-christmas-tree-gif-7301044\n';
                 resolvedChannel.send(content);
               }
             });
@@ -105,12 +121,31 @@ client.on('message', (msg) => {
     }
     case '-quick':
     case '-q': {
-      if (roomManager) {
-        msg.reply('looking for available game...');
+      if (roomManager && quickManager) {
+        if (
+          !quickManager
+            .list()
+            .map((channel) => channel.id)
+            .includes(msg.channel.id)
+        ) {
+          msg.author.createDM().then((channel) => {
+            let content = ``;
+            content += `Hello :wave:,\n\n`;
+            content += `Looks like you used \`-q\` command inside an unsupported text channel!\n`;
+            content += `Can you try again inside these text channels?\n\n`;
+            content += messageStringService.printQuickChannels(
+              quickManager.list(),
+            );
+            content += `\nThanks! :pray:`;
+            channel.send(content);
+          });
+          break;
+        }
+        msg.reply('looking for available game... :woman_detective:');
         const rooms = roomManager.listAvailableRooms(1);
         if (rooms.length < 1) {
           msg.channel.send(
-            'Looks like no room is looking for players right now :(',
+            'Hmm, looks like no room is looking for players right now :sob:',
           );
           break;
         } else {
@@ -149,6 +184,9 @@ client.on('message', (msg) => {
         info += messageStringService.printGameChannels(
           roomManager.listTrackedRooms(),
         );
+      }
+      if (quickManager) {
+        info += messageStringService.printQuickChannels(quickManager.list());
       }
       if (notificationManager) {
         info += messageStringService.printNotificationChannels(
@@ -243,6 +281,39 @@ client.on('message', (msg) => {
             if (channel) {
               notificationManager.removeByChannelID(channel.id);
               msg.reply(`room removed from alerts: ${channel.id}`);
+            }
+          }
+        }
+      }
+      break;
+    }
+    case '-addquickchannel': {
+      if (quickManager) {
+        if (arg1) {
+          const channelID = arg1;
+          if (msg.guild) {
+            const channel = msg.guild.channels.resolve(channelID);
+            if (channel) {
+              quickManager.add({
+                id: channel.id,
+                name: channel.name,
+              });
+              msg.reply(`room added to quicks: ${channel.id}`);
+            }
+          }
+        }
+      }
+      break;
+    }
+    case '-removequickchannel': {
+      if (quickManager) {
+        if (arg1) {
+          const channelID = arg1;
+          if (msg.guild) {
+            const channel = msg.guild.channels.resolve(channelID);
+            if (channel) {
+              quickManager.removeByChannelID(channel.id);
+              msg.reply(`room removed from quicks: ${channel.id}`);
             }
           }
         }
