@@ -52,6 +52,7 @@ describe('RoomManagerImpl', () => {
         getGuildID: jest.fn(),
         getDefaultNotificationChannels: jest.fn(),
         getDefaultVoiceChannels: jest.fn(() => ['channel-id']),
+        getAlertInterval: jest.fn(),
       },
       discordGuild,
     );

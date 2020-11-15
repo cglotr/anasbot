@@ -1,4 +1,5 @@
 import {
+  ALERT_INTERVAL,
   DEFAULT_NOTIFICATION_CHANNELS,
   DEFAULT_VOICE_CHANNELS,
   DISCORD_TOKEN,
@@ -22,6 +23,15 @@ export class EnvironmentServiceImpl implements EnvironmentService {
 
   public getDefaultVoiceChannels(): string[] {
     return this.getEnvs(DEFAULT_VOICE_CHANNELS);
+  }
+
+  public getAlertInterval(): number {
+    const value = parseInt(this.getEnv(ALERT_INTERVAL), 10);
+    // eslint-disable-next-line no-restricted-globals
+    if (isNaN(value)) {
+      return 0;
+    }
+    return value;
   }
 
   private getEnv(key: string): string {

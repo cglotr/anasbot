@@ -36,6 +36,7 @@ describe('NotificationManagerImpl', () => {
         getGuildID: jest.fn(),
         getDefaultNotificationChannels: jest.fn(() => ['channel-id']),
         getDefaultVoiceChannels: jest.fn(),
+        getAlertInterval: jest.fn(),
       },
       discordGuild,
     );
@@ -87,6 +88,7 @@ describe('NotificationManagerImpl', () => {
         getGuildID: jest.fn(),
         getDefaultNotificationChannels: jest.fn(() => ['channel-id']),
         getDefaultVoiceChannels: jest.fn(),
+        getAlertInterval: jest.fn(),
       },
       discordGuild,
     );

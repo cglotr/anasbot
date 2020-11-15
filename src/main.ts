@@ -18,8 +18,6 @@ import { VoiceChannelServiceImpl } from './services/voicechannelserviceimpl';
 import { TextChannel } from './types/textchannel';
 import { VoiceChannel } from './types/voicechannel';
 
-const TIME_5_MIN: number = 1000 * 60 * 5;
-
 config();
 
 const client = new Discord.Client();
@@ -62,6 +60,7 @@ client.on('ready', () => {
       start(guild);
     }
   }
+  const alertIntervalSec = environmentService.getAlertInterval();
   client.setInterval(() => {
     if (roomManager) {
       const rooms = roomManager.listAvailableRooms(5);
@@ -84,7 +83,8 @@ client.on('ready', () => {
         }
       }
     }
-  }, TIME_5_MIN);
+  }, alertIntervalSec * 1000);
+  loggerService.info(`alert interval set at ${alertIntervalSec} sec`);
   loggerService.info('anasbot ready!');
 });
 

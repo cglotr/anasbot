@@ -1,4 +1,5 @@
 import {
+  ALERT_INTERVAL,
   DEFAULT_NOTIFICATION_CHANNELS,
   DEFAULT_VOICE_CHANNELS,
   DISCORD_TOKEN,
@@ -45,5 +46,13 @@ describe('EnvironmentServiceImpl', () => {
 
     process.env[GUILD_ID] = 'guild-id';
     expect(environmentService.getGuildID()).toEqual('guild-id');
+  });
+
+  test('getAlertInterval()', () => {
+    delete process.env[ALERT_INTERVAL];
+    expect(environmentService.getAlertInterval()).toEqual(0);
+
+    process.env[ALERT_INTERVAL] = '300';
+    expect(environmentService.getAlertInterval()).toEqual(300);
   });
 });
