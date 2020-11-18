@@ -1,3 +1,4 @@
+import Discord from 'discord.js';
 import { DiscordGuild } from '../discord/discordguild';
 import { DiscordService } from '../services/discordservice';
 import { EnvironmentService } from '../services/environmentservice';
@@ -15,6 +16,8 @@ export class RoomManagerImpl implements RoomManager {
 
   private guild: DiscordGuild;
 
+  private userQueue: { user: Discord.User; channel: VoiceChannel }[];
+
   constructor(
     voiceChannelService: VoiceChannelService,
     discordService: DiscordService,
@@ -29,6 +32,7 @@ export class RoomManagerImpl implements RoomManager {
     environmentService.getDefaultVoiceChannels().forEach((channelID) => {
       this.addVoiceChannel(channelID);
     });
+    this.userQueue = [];
   }
 
   public add(channelID: string): void {
@@ -79,6 +83,31 @@ export class RoomManagerImpl implements RoomManager {
           `added room to game channels: id=${channel.id}, name=${channel.name}`,
         );
       });
+    }
+  }
+
+  public addUserToQueue(user: Discord.User, channel: VoiceChannel) {
+    this.userQueue.push({ user, channel });
+  }
+
+  public workOnQueues() {
+    this.loggerService.info(`queues:${JSON.stringify(this.userQueue)}`);
+    for (let i = 0; i < this.userQueue.length; i++) {
+      const { user, channel } = this.userQueue[i];
+      const requested_room = this.listTrackedRooms().find(
+        (room) => room.id == channel.id,
+      );
+      if (requested_room) {
+        const left = requested_room.userLimit - requested_room.userCount;
+        if (left > 0) {
+          const index = this.listTrackedRooms().findIndex(
+            (room) => room.id == channel.id,
+          );
+          user.createDM().then((dmChannel) => dmChannel.send(channel.link));
+          this.userQueue.splice(index, 1);
+          i -= 1;
+        }
+      }
     }
   }
 }

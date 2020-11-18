@@ -141,17 +141,35 @@ client.on('message', (msg) => {
           });
           break;
         }
-        msg.reply('looking for available game... :woman_detective:');
-        const rooms = roomManager.listAvailableRooms(1);
-        if (rooms.length < 1) {
-          msg.channel.send(
-            'Hmm, looks like no room is looking for players right now :sob:',
-          );
-          break;
+        if (arg1 === '') {
+          msg.reply('looking for available game... :woman_detective:');
+          const rooms = roomManager.listAvailableRooms(1);
+          if (rooms.length < 1) {
+            msg.channel.send(
+              'Hmm, looks like no room is looking for players right now :sob:',
+            );
+            break;
+          } else {
+            msg.channel.send(
+              messageStringService.printAvailableGameChannels(rooms),
+            );
+          }
         } else {
-          msg.channel.send(
-            messageStringService.printAvailableGameChannels(rooms),
-          );
+          const channel = roomManager
+            .listTrackedRooms()
+            .find((room) => room.position.toString() == arg1);
+          if (channel) {
+            loggerService.info(
+              `added user_id:${msg.author.id} to queue for channel_id:${channel.id}`,
+            );
+            roomManager.addUserToQueue(msg.author, channel);
+          } else {
+            msg.channel.send(
+              `There are only ${
+                roomManager.listTrackedRooms().length
+              } possible channels.`,
+            );
+          }
         }
       }
       break;
@@ -340,6 +358,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
         newState.channel.members.size,
       );
     }
+    roomManager.workOnQueues();
   }
 });
 
