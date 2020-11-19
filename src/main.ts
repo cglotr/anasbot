@@ -141,6 +141,7 @@ client.on('message', (msg) => {
           });
           break;
         }
+        // User wants to join _any_ rooms
         if (arg1 === '') {
           msg.reply('looking for available game... :woman_detective:');
           const rooms = roomManager.listAvailableRooms(1);
@@ -157,12 +158,19 @@ client.on('message', (msg) => {
         } else {
           const channel = roomManager
             .listTrackedRooms()
-            .find((room) => room.position.toString() == arg1);
+            .find((room) => room.position.toString() === arg1);
           if (channel) {
-            loggerService.info(
-              `added user_id:${msg.author.id} to queue for channel_id:${channel.id}`,
-            );
-            roomManager.addUserToQueue(msg.author, channel);
+            if (channel.userLimit - channel.userCount === 0) {
+              msg.channel.send([
+                'The channel is full. Adding you to the queue...',
+              ]);
+              roomManager.addUserToQueue(msg.author, channel);
+            } else {
+              msg.channel.send([
+                'There are slots open in the channel. Join it!',
+                messageStringService.printAvailableGameChannels([channel]),
+              ]);
+            }
           } else {
             msg.channel.send(
               `There are only ${

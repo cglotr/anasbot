@@ -4,6 +4,7 @@ import { DiscordService } from '../services/discordservice';
 import { EnvironmentService } from '../services/environmentservice';
 import { LoggerService } from '../services/loggerservice';
 import { VoiceChannelService } from '../services/voicechannelservice';
+import { ChannelQueue } from '../types/channelqueue';
 import { VoiceChannel } from '../types/voicechannel';
 import { RoomManager } from './roommanager';
 
@@ -16,7 +17,7 @@ export class RoomManagerImpl implements RoomManager {
 
   private guild: DiscordGuild;
 
-  private userQueue: { user: Discord.User; channel: VoiceChannel }[];
+  private userQueue: ChannelQueue[];
 
   constructor(
     voiceChannelService: VoiceChannelService,
@@ -92,22 +93,24 @@ export class RoomManagerImpl implements RoomManager {
 
   public workOnQueues() {
     this.loggerService.info(`queues:${JSON.stringify(this.userQueue)}`);
-    for (let i = 0; i < this.userQueue.length; i++) {
-      const { user, channel } = this.userQueue[i];
-      const requested_room = this.listTrackedRooms().find(
-        (room) => room.id == channel.id,
+    const nextQueue: ChannelQueue[] = [];
+    this.userQueue.forEach(({ user, channel }) => {
+      const requestedRoom = this.listTrackedRooms().find(
+        (room) => room.id === channel.id,
       );
-      if (requested_room) {
-        const left = requested_room.userLimit - requested_room.userCount;
+      if (requestedRoom) {
+        const left = requestedRoom.userLimit - requestedRoom.userCount;
         if (left > 0) {
-          const index = this.listTrackedRooms().findIndex(
-            (room) => room.id == channel.id,
-          );
           user.createDM().then((dmChannel) => dmChannel.send(channel.link));
-          this.userQueue.splice(index, 1);
-          i -= 1;
+        } else {
+          nextQueue.push({ user, channel });
         }
+      } else {
+        this.loggerService.warning(
+          'Apparently, the user requested a room that does not exist.',
+        );
       }
-    }
+    });
+    this.userQueue = nextQueue;
   }
 }
