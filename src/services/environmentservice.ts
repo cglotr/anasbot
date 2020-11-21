@@ -5,4 +5,5 @@ export interface EnvironmentService {
   getDefaultVoiceChannels(): string[];
   getDefaultQuickChannels(): string[];
   getAlertInterval(): number;
+  getSolveQueueInterval(): number;
 }

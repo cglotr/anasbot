@@ -3,6 +3,8 @@ import { config } from 'dotenv';
 import { DiscordGuild } from './discord/discordguild';
 import { NotificationManager } from './managers/notificationmanager';
 import { NotificationManagerImpl } from './managers/notificationmanagerimpl';
+import { QueueManager } from './managers/queuemanager';
+import { QueueManagerImpl } from './managers/queuemanagerimpl';
 import { QuickManager } from './managers/quickmanager';
 import { QuickManagerImpl } from './managers/quickmanagerimpl';
 import { RoomManager } from './managers/roommanager';
@@ -29,6 +31,7 @@ const messageStringService: MessageStringService = new MessageStringServiceImpl(
 const voiceChannelService: VoiceChannelService = new VoiceChannelServiceImpl();
 const environmentService: EnvironmentService = new EnvironmentServiceImpl();
 
+let queueManager: QueueManager;
 let roomManager: RoomManager;
 let notificationManager: NotificationManager;
 let quickManager: QuickManager;
@@ -60,6 +63,9 @@ function start(guild: DiscordGuild): void {
     environmentService,
     guild,
   );
+
+  loggerService.info('initializing queue manager...');
+  queueManager = new QueueManagerImpl(loggerService, voiceChannelService);
 
   loggerService.info(`anasbot started: guild=${guild.id}`);
 }
@@ -100,6 +106,26 @@ client.on('ready', () => {
       }
     }
   }, alertIntervalSec * 1000);
+
+  const solveQueueIntervalSec = environmentService.getSolveQueueInterval();
+  client.setInterval(() => {
+    queueManager.solveQueue().forEach(async ({ userId, channelId }) => {
+      const user = await client.users.fetch(userId);
+      user.createDM().then((msg) => {
+        const channel = voiceChannelService
+          .list()
+          .find((ch) => ch.id === channelId);
+        if (channel) {
+          msg.send(channel.link);
+        } else {
+          loggerService.warning(
+            `Attempted to ask user with userId:${userId} to join a voice channel with channelId:${channelId} that does not exist in our voice channel service.`,
+          );
+        }
+      });
+    });
+  }, solveQueueIntervalSec * 1000);
+
   loggerService.info(`alert interval set at ${alertIntervalSec} sec`);
   loggerService.info('anasbot ready!');
 });
@@ -156,27 +182,11 @@ client.on('message', (msg) => {
             );
           }
         } else {
-          const channel = roomManager
-            .listTrackedRooms()
-            .find((room) => room.position.toString() === arg1);
+          const channel = voiceChannelService
+            .list()
+            .find((ch) => ch.position.toString() === arg1);
           if (channel) {
-            if (channel.userLimit - channel.userCount === 0) {
-              msg.channel.send([
-                'The channel is full. Adding you to the queue...',
-              ]);
-              roomManager.addUserToQueue(msg.author, channel);
-            } else {
-              msg.channel.send([
-                'There are slots open in the channel. Join it!',
-                messageStringService.printAvailableGameChannels([channel]),
-              ]);
-            }
-          } else {
-            msg.channel.send(
-              `There are only ${
-                roomManager.listTrackedRooms().length
-              } possible channels.`,
-            );
+            queueManager.addUserToQueue(msg.author.id, channel.id);
           }
         }
       }
@@ -366,7 +376,6 @@ client.on('voiceStateUpdate', (oldState, newState) => {
         newState.channel.members.size,
       );
     }
-    roomManager.workOnQueues();
   }
 });
 

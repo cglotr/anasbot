@@ -1,10 +1,8 @@
-import Discord from 'discord.js';
 import { DiscordGuild } from '../discord/discordguild';
 import { DiscordService } from '../services/discordservice';
 import { EnvironmentService } from '../services/environmentservice';
 import { LoggerService } from '../services/loggerservice';
 import { VoiceChannelService } from '../services/voicechannelservice';
-import { ChannelQueue } from '../types/channelqueue';
 import { VoiceChannel } from '../types/voicechannel';
 import { RoomManager } from './roommanager';
 
@@ -16,8 +14,6 @@ export class RoomManagerImpl implements RoomManager {
   private loggerService: LoggerService;
 
   private guild: DiscordGuild;
-
-  private userQueue: ChannelQueue[];
 
   constructor(
     voiceChannelService: VoiceChannelService,
@@ -33,7 +29,6 @@ export class RoomManagerImpl implements RoomManager {
     environmentService.getDefaultVoiceChannels().forEach((channelID) => {
       this.addVoiceChannel(channelID);
     });
-    this.userQueue = [];
   }
 
   public add(channelID: string): void {
@@ -85,32 +80,5 @@ export class RoomManagerImpl implements RoomManager {
         );
       });
     }
-  }
-
-  public addUserToQueue(user: Discord.User, channel: VoiceChannel) {
-    this.userQueue.push({ user, channel });
-  }
-
-  public workOnQueues() {
-    this.loggerService.info(`queues:${JSON.stringify(this.userQueue)}`);
-    const nextQueue: ChannelQueue[] = [];
-    this.userQueue.forEach(({ user, channel }) => {
-      const requestedRoom = this.listTrackedRooms().find(
-        (room) => room.id === channel.id,
-      );
-      if (requestedRoom) {
-        const left = requestedRoom.userLimit - requestedRoom.userCount;
-        if (left > 0) {
-          user.createDM().then((dmChannel) => dmChannel.send(channel.link));
-        } else {
-          nextQueue.push({ user, channel });
-        }
-      } else {
-        this.loggerService.warning(
-          'Apparently, the user requested a room that does not exist.',
-        );
-      }
-    });
-    this.userQueue = nextQueue;
   }
 }
