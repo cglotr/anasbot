@@ -1,103 +1,87 @@
-import { DiscordGuild } from '../discord/discordguild';
-import { DiscordInvite } from '../discord/discordinvite';
-import { DiscordVoiceChannel } from '../discord/discordvoicechannel';
 import { LoggerServiceImpl } from '../services/loggerserviceimpl';
-import { VoiceChannelServiceImpl } from '../services/voicechannelserviceimpl';
-import { wait } from '../utils/wait';
-import { RoomManager } from './roommanager';
-import { RoomManagerImpl } from './roommanagerimpl';
+import { VoiceChannelService } from '../services/voicechannelservice';
+import { QueueSubmission } from '../types/queuesubmission';
+import { VoiceChannel } from '../types/voicechannel';
+import { QueueManager } from './queuemanager';
+import { QueueManagerImpl } from './queuemanagerimpl';
 
-describe('RoomManagerImpl', () => {
-  let roomManager: RoomManager;
-
-  let discordGuild: DiscordGuild;
-  let discordVoiceChannel: DiscordVoiceChannel;
-  let discordInvite: DiscordInvite;
+describe('QueueManagerImpl', () => {
+  let queueManager: QueueManager;
+  let voiceChannelService: VoiceChannelService;
+  let fullVoiceChannel: VoiceChannel;
+  let nonFullVoiceChannel: VoiceChannel;
+  let emptyVoiceChannel: VoiceChannel;
+  let fullChannelQueueSubmission: QueueSubmission;
+  let nonFullChannelQueueSubmission: QueueSubmission;
+  let emptyChannelQueueSubmission: QueueSubmission;
 
   beforeEach(() => {
-    discordInvite = {
-      url: 'discord-invite-url',
-    };
-    discordVoiceChannel = {
-      id: 'channel-id',
-      name: 'channel-name',
-      members: {
-        size: 0,
-      },
+    fullVoiceChannel = {
+      id: 'full-voice-channel-id',
+      name: 'full-voice-channel-name',
+      userCount: 10,
       userLimit: 10,
+      link: 'full-voice-channel-link',
       position: 0,
-      createInvite: jest.fn(async () => {
-        return new Promise((resolve) => {
-          resolve(discordInvite);
-        });
-      }),
     };
-    discordGuild = {
-      id: 'guild-id',
-      channels: {
-        resolve: jest.fn(() => {
-          return discordVoiceChannel;
-        }),
-      },
+    nonFullVoiceChannel = {
+      id: 'nonfull-voice-channel-id',
+      name: 'nonfull-voice-channel-name',
+      userCount: 5,
+      userLimit: 10,
+      link: 'nonfull-voice-channel-link',
+      position: 1,
     };
-    roomManager = new RoomManagerImpl(
-      new VoiceChannelServiceImpl(),
-      {
-        getDiscordVoiceChannel: jest.fn(() => discordVoiceChannel),
-        getDiscordTextChannel: jest.fn(),
-      },
-      new LoggerServiceImpl(),
-      {
-        getDiscordToken: jest.fn(),
-        getGuildID: jest.fn(),
-        getDefaultNotificationChannels: jest.fn(),
-        getDefaultVoiceChannels: jest.fn(() => ['channel-id']),
-        getDefaultQuickChannels: jest.fn(),
-        getAlertInterval: jest.fn(),
-        getSolveQueueInterval: jest.fn(),
-      },
-      discordGuild,
-    );
-  });
-
-  it('should add & remove voice channel', async () => {
-    roomManager.add('channel-id');
-    await wait();
-
-    expect(discordGuild.channels.resolve).toHaveBeenCalledWith('channel-id');
-    expect(discordVoiceChannel.createInvite).toHaveBeenCalledWith({
-      maxAge: 0,
-    });
-    expect(roomManager.listTrackedRooms().length).toBe(1);
-    expect(roomManager.listTrackedRooms()[0]).toEqual({
-      id: 'channel-id',
-      name: 'channel-name',
+    emptyVoiceChannel = {
+      id: 'empty-voice-channel-id',
+      name: 'empty-voice-channel',
       userCount: 0,
-      userLimit: 10,
-      link: 'discord-invite-url',
-      position: 0,
-    });
-
-    roomManager.remove('channel-id');
-    await wait();
-
-    expect(roomManager.listTrackedRooms().length).toBe(0);
+      userLimit: 5,
+      link: 'empty-voice-channel-link',
+      position: 2,
+    };
+    voiceChannelService = {
+      add: jest.fn(),
+      list: jest.fn(() => {
+        return [fullVoiceChannel, nonFullVoiceChannel, emptyVoiceChannel];
+      }),
+      updateUserCount: jest.fn(),
+      remove: jest.fn(),
+    };
+    queueManager = new QueueManagerImpl(
+      new LoggerServiceImpl(),
+      voiceChannelService,
+    );
+    fullChannelQueueSubmission = {
+      userId: 'test-user-id',
+      channelId: 'full-voice-channel-id',
+    };
+    nonFullChannelQueueSubmission = {
+      userId: 'test-user-id',
+      channelId: 'nonfull-voice-channel-id',
+    };
+    emptyChannelQueueSubmission = {
+      userId: 'test-user-id',
+      channelId: 'empty-voice-channel-id',
+    };
   });
 
-  it('should update room user count & show room as available', async () => {
-    roomManager.add('channel-id');
-    await wait();
+  it('asking to queue into a full room', async () => {
+    queueManager.addUserToQueue(fullChannelQueueSubmission);
+    expect(queueManager.solveQueue()).toStrictEqual([]);
+  });
 
-    expect(roomManager.listAvailableRooms(1).length).toBe(0);
+  it('asking to queue into a non-full room', async () => {
+    queueManager.addUserToQueue(nonFullChannelQueueSubmission);
+    expect(queueManager.solveQueue()).toStrictEqual([
+      nonFullChannelQueueSubmission,
+    ]);
+  });
 
-    roomManager.updateRoomUserCount('not-found', 9);
-    await wait();
-
-    expect(roomManager.listAvailableRooms(1).length).toBe(0);
-
-    roomManager.updateRoomUserCount('channel-id', 9);
-    await wait();
-
-    expect(roomManager.listAvailableRooms(1).length).toBe(1);
+  it('asking to queue into an empty room', async () => {
+    queueManager.addUserToQueue(emptyChannelQueueSubmission);
+    expect(queueManager.solveQueue()).toStrictEqual([
+      emptyChannelQueueSubmission,
+    ]);
   });
 });

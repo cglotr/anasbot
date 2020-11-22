@@ -19,25 +19,26 @@ export class QueueManagerImpl implements QueueManager {
     this.channelQueue = new Map();
   }
 
-  public addUserToQueue(userId: string, channelId: string): void {
+  public addUserToQueue(queueSubmission: QueueSubmission): void {
+    const { userId, channelId } = queueSubmission;
     this.loggerService.info(
       `Attempting to add userId:${userId} to queue for channelId:${channelId}`,
     );
     const queue = this.channelQueue.get(channelId);
     if (!queue) {
       this.loggerService.info(
-        `Create a queue for the room with channelId:${channelId} with user with userId:${userId} as its first queuer`,
+        `Created a queue for the room with channelId:${channelId} with userId:${userId} as its first queuer`,
       );
       this.channelQueue.set(channelId, [userId]);
     } else {
       const user = queue.find((id) => id === userId);
       if (user) {
         this.loggerService.info(
-          `The user with userId:${userId} already queued for channel with channelId:${channelId}`,
+          `The userId:${userId} already queued for channelId:${channelId}`,
         );
       } else {
         this.loggerService.info(
-          `Added user with userId:${userId} into the channel with channelId:${channelId}`,
+          `Added userId:${userId} into the channelId:${channelId}`,
         );
         queue.push(userId);
       }
@@ -51,14 +52,12 @@ export class QueueManagerImpl implements QueueManager {
     );
     const queue = this.channelQueue.get(channelId);
     if (!queue) {
-      this.loggerService.info(
-        `The channel with channelId:${channelId} does not exist`,
-      );
+      this.loggerService.info(`The channelId:${channelId} does not exist`);
     } else {
       const user = queue.find((id) => id === userId);
       if (user) {
         this.loggerService.info(
-          `Removed user with userId:${userId} from channel with channelId:${channelId}`,
+          `Removed userId:${userId} from channelId:${channelId}`,
         );
         this.channelQueue.set(
           channelId,
@@ -66,32 +65,42 @@ export class QueueManagerImpl implements QueueManager {
         );
       } else {
         this.loggerService.info(
-          `The user with userId:${userId} does not exist in the channel with channelId:${channelId}`,
+          `The userId:${userId} does not exist in the channelId:${channelId}`,
         );
       }
     }
   }
 
   public solveQueue(): QueueSubmission[] {
-    const result: QueueSubmission[] = [];
+    const satisfiableQueueSubmission: QueueSubmission[] = [];
     this.voiceChannelService.list().forEach((channel) => {
       const usersQueueing = this.channelQueue.get(channel.id);
       if (usersQueueing) {
+        this.loggerService.info(
+          `The following users:${JSON.stringify(
+            usersQueueing,
+          )} are queueing and there are ${
+            channel.userLimit - channel.userCount
+          } slots`,
+        );
         // Basically clamps between 0 <= x <= (min(slots, queue.length))
         const slotLeft = Math.max(
           0,
           Math.min(channel.userLimit - channel.userCount, usersQueueing.length),
         );
         this.loggerService.info(
-          `There are ${slotLeft} slots left for channel with channelId:${channel.id}`,
+          `There are ${slotLeft} slots left for channelId:${channel.id}`,
         );
         for (let a = 0; a < slotLeft; a += 1) {
           // SAFETY: We have already checked the bounds before.
           const userId = usersQueueing.shift() as string;
-          result.push({
+          satisfiableQueueSubmission.push({
             userId,
             channelId: channel.id,
           });
+          this.loggerService.info(
+            `Sending userId:${userId} to join channelId:${channel.id}`,
+          );
         }
       } else {
         this.loggerService.info(
@@ -99,6 +108,11 @@ export class QueueManagerImpl implements QueueManager {
         );
       }
     });
-    return result;
+    this.loggerService.info(
+      `The following queueSubmissions:${JSON.stringify(
+        satisfiableQueueSubmission,
+      )} can be satisfied`,
+    );
+    return satisfiableQueueSubmission;
   }
 }

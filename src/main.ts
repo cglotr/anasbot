@@ -186,7 +186,10 @@ client.on('message', (msg) => {
             .list()
             .find((ch) => ch.position.toString() === arg1);
           if (channel) {
-            queueManager.addUserToQueue(msg.author.id, channel.id);
+            queueManager.addUserToQueue({
+              userId: msg.author.id,
+              channelId: channel.id,
+            });
           }
         }
       }

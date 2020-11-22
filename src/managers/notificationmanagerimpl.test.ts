@@ -38,6 +38,7 @@ describe('NotificationManagerImpl', () => {
         getDefaultVoiceChannels: jest.fn(),
         getDefaultQuickChannels: jest.fn(),
         getAlertInterval: jest.fn(),
+        getSolveQueueInterval: jest.fn(),
       },
       discordGuild,
     );
@@ -91,6 +92,7 @@ describe('NotificationManagerImpl', () => {
         getDefaultQuickChannels: jest.fn(),
         getDefaultVoiceChannels: jest.fn(),
         getAlertInterval: jest.fn(),
+        getSolveQueueInterval: jest.fn(),
       },
       discordGuild,
     );
