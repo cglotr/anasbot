@@ -102,17 +102,8 @@ export class QueueManagerImpl implements QueueManager {
             `Sending userId:${userId} to join channelId:${channel.id}`,
           );
         }
-      } else {
-        this.loggerService.info(
-          `No one queued for channel with channeldId:${channel.id}`,
-        );
       }
     });
-    this.loggerService.info(
-      `The following queueSubmissions:${JSON.stringify(
-        satisfiableQueueSubmission,
-      )} can be satisfied`,
-    );
     return satisfiableQueueSubmission;
   }
 }
