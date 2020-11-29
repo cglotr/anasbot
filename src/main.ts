@@ -182,9 +182,10 @@ client.on('message', (msg) => {
             );
           }
         } else {
-          const channel = voiceChannelService
-            .list()
-            .find((ch) => ch.position.toString() === arg1);
+          const channel = voiceChannelService.list().find((ch) => {
+            const userChannelPosition = ch.position + 1;
+            return userChannelPosition.toString() === arg1.trim();
+          });
           if (channel) {
             queueManager.addUserToQueue({
               userId: msg.author.id,

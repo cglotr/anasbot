@@ -76,20 +76,10 @@ export class QueueManagerImpl implements QueueManager {
     this.voiceChannelService.list().forEach((channel) => {
       const usersQueueing = this.channelQueue.get(channel.id);
       if (usersQueueing) {
-        this.loggerService.info(
-          `The following users:${JSON.stringify(
-            usersQueueing,
-          )} are queueing and there are ${
-            channel.userLimit - channel.userCount
-          } slots`,
-        );
         // Basically clamps between 0 <= x <= (min(slots, queue.length))
         const slotLeft = Math.max(
           0,
           Math.min(channel.userLimit - channel.userCount, usersQueueing.length),
-        );
-        this.loggerService.info(
-          `There are ${slotLeft} slots left for channelId:${channel.id}`,
         );
         for (let a = 0; a < slotLeft; a += 1) {
           // SAFETY: We have already checked the bounds before.
