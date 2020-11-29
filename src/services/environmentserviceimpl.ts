@@ -5,6 +5,7 @@ import {
   DEFAULT_VOICE_CHANNELS,
   DISCORD_TOKEN,
   GUILD_ID,
+  SOLVE_QUEUE_INTERVAL,
 } from '../constants';
 import { getEnv } from '../utils/getenv';
 import { EnvironmentService } from './environmentservice';
@@ -35,6 +36,15 @@ export class EnvironmentServiceImpl implements EnvironmentService {
     // eslint-disable-next-line no-restricted-globals
     if (isNaN(value)) {
       return 0;
+    }
+    return value;
+  }
+
+  public getSolveQueueInterval(): number {
+    const value = parseInt(this.getEnv(SOLVE_QUEUE_INTERVAL), 10);
+    // eslint-disable-next-line no-restricted-globals
+    if (isNaN(value)) {
+      return 5;
     }
     return value;
   }

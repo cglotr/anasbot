@@ -54,6 +54,7 @@ describe('RoomManagerImpl', () => {
         getDefaultVoiceChannels: jest.fn(() => ['channel-id']),
         getDefaultQuickChannels: jest.fn(),
         getAlertInterval: jest.fn(),
+        getSolveQueueInterval: jest.fn(),
       },
       discordGuild,
     );
